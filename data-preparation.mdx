@@ -1,0 +1,173 @@
+---
+title: Data Preparation
+description: Load and preprocess the RIIID online education dataset
+---
+
+## Overview
+
+This guide shows how to load and prepare the RIIID dataset for analysis. The dataset is large (~100GB uncompressed), so we use chunked processing and sampling strategies to make it manageable.
+
+## Dataset Requirements
+
+<Note>
+  You'll need the `train.csv` file from the [RIIID Answer Correctness Prediction](https://www.kaggle.com/competitions/riiid-test-answer-prediction) Kaggle competition. Download it and place it in your project directory.
+</Note>
+
+## Loading the Data
+
+The following code loads the data using a chunked approach with a 1% random sample:
+
+```julia
+using LinearAlgebra
+using Plots
+using Statistics
+using CSV, DataFrames
+using Random
+
+df = DataFrame()
+
+for chunk in CSV.Chunks("train.csv"; ntasks=10)
+    df_chunk = DataFrame(chunk)
+    df_chunk = filter(row -> rand() < 0.01, df_chunk) # randomly takes 1% of the dataset for each chunk
+    filter!(row -> row.content_type_id == 0, df_chunk)
+    append!(df, df_chunk)
+end
+```
+
+## How It Works
+
+<Steps>
+  <Step title="Initialize Empty DataFrame">
+    Create an empty DataFrame to store the processed data:
+    
+    ```julia
+    df = DataFrame()
+    ```
+  </Step>
+  
+  <Step title="Process in Chunks">
+    Use `CSV.Chunks()` to read the file in parallel chunks:
+    
+    ```julia
+    for chunk in CSV.Chunks("train.csv"; ntasks=10)
+        df_chunk = DataFrame(chunk)
+        # ... processing ...
+    end
+    ```
+    
+    The `ntasks=10` parameter processes the file using 10 parallel tasks for efficiency.
+  </Step>
+  
+  <Step title="Random Sampling">
+    Take a 1% random sample from each chunk to reduce memory usage:
+    
+    ```julia
+    df_chunk = filter(row -> rand() < 0.01, df_chunk)
+    ```
+    
+    This gives each row a 1% chance of being included in the final dataset.
+  </Step>
+  
+  <Step title="Filter Questions Only">
+    Keep only questions (exclude lectures) by filtering for `content_type_id == 0`:
+    
+    ```julia
+    filter!(row -> row.content_type_id == 0, df_chunk)
+    ```
+  </Step>
+  
+  <Step title="Append to Main DataFrame">
+    Add the processed chunk to the main DataFrame:
+    
+    ```julia
+    append!(df, df_chunk)
+    ```
+  </Step>
+</Steps>
+
+## Why This Approach?
+
+### Chunked Processing
+
+The RIIID dataset contains over 100 million rows. Loading it all at once would require excessive memory. `CSV.Chunks()` processes the file incrementally, keeping memory usage reasonable.
+
+### Random Sampling
+
+A 1% random sample still provides approximately 1 million rows of data—more than enough for statistical analysis and machine learning while being computationally tractable.
+
+### Questions Only
+
+The dataset includes both questions (`content_type_id == 0`) and lectures (`content_type_id == 1`). Since we're predicting answer correctness, we filter for questions only.
+
+<Warning>
+  The sampling is random, so results may vary slightly between runs. Set a random seed for reproducibility:
+  
+  ```julia
+  using Random
+  Random.seed!(42)
+  ```
+</Warning>
+
+## Data Schema
+
+The loaded DataFrame contains the following key columns:
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `user_id` | Int | Unique identifier for each student |
+| `content_id` | Int | Question ID |
+| `content_type_id` | Int | 0 = question, 1 = lecture |
+| `answered_correctly` | Int | 0 = incorrect, 1 = correct |
+| `prior_question_elapsed_time` | Float | Time spent on previous question (ms) |
+| `prior_question_had_explanation` | Bool | Whether previous question had an explanation |
+| `task_container_id` | Int | Bundle/session identifier |
+| `timestamp` | Int | Time of interaction (ms since start) |
+
+## Verify the Data
+
+Check that the data loaded correctly:
+
+```julia
+# Display first few rows
+first(df, 5)
+
+# Check dimensions
+size(df)
+
+# Summary statistics
+describe(df)
+
+# Verify only questions are included
+unique(df.content_type_id)  # Should only show [0]
+```
+
+## Performance Considerations
+
+<Note>
+  Loading time depends on your hardware:
+  - **Expected time**: 5-15 minutes
+  - **Memory usage**: 2-4 GB RAM
+  - **Final dataset size**: ~1 million rows (1% of original)
+</Note>
+
+### Adjusting the Sample Rate
+
+To change the sample size, modify the random filter:
+
+```julia
+# 5% sample (larger dataset, slower processing)
+df_chunk = filter(row -> rand() < 0.05, df_chunk)
+
+# 0.5% sample (smaller dataset, faster processing)
+df_chunk = filter(row -> rand() < 0.005, df_chunk)
+```
+
+## Next Steps
+
+With your data loaded, you can now:
+- Perform exploratory data analysis
+- Engineer features for machine learning
+- Train clustering models
+- Build predictive models
+
+See the [Feature Engineering](/feature-engineering) guide for the next steps in the analysis pipeline.

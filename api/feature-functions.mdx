@@ -1,0 +1,275 @@
+---
+title: 'Feature Functions'
+description: 'Functions for engineering and transforming features from raw student performance data'
+---
+
+## Overview
+
+Feature engineering functions prepare raw student data for machine learning by creating meaningful derived features, normalizing values, and handling edge cases. These functions extract performance trends, engagement patterns, and learning dynamics.
+
+---
+
+## prepare_features()
+
+Comprehensive feature engineering function that extracts 11 advanced features from raw student interaction logs.
+
+### Signature
+
+```julia
+function prepare_features(df)
+```
+
+### Parameters
+
+<ParamField path="df" type="DataFrame" required>
+  Raw DataFrame containing student interaction logs with columns:
+  - `user_id`: Student identifier
+  - `content_type_id`: Type of content (0 = question)
+  - `answered_correctly`: Binary correctness indicator
+  - `timestamp`: Unix timestamp of interaction
+  - `task_container_id`: Container grouping related questions
+  - `prior_question_had_explanation`: Whether previous question had explanation
+  - `prior_question_elapsed_time`: Time spent on previous question
+</ParamField>
+
+### Returns
+
+<ResponseField name="X" type="Matrix{Float64}">
+  Normalized feature matrix (n_users × 11) with z-score standardization
+</ResponseField>
+
+<ResponseField name="y" type="Vector{Float64}">
+  Binary target variable indicating high performers (mean_acc >= median)
+</ResponseField>
+
+<ResponseField name="user_features" type="DataFrame">
+  DataFrame containing all engineered features before matrix conversion
+</ResponseField>
+
+<ResponseField name="feature_cols" type="Vector{Symbol}">
+  Column names of the 11 features in order
+</ResponseField>
+
+### Engineered Features
+
+<Accordion title="1. Mean Accuracy (mean_acc)">
+  ```julia
+  mean_acc = mean(user_data.answered_correctly)
+  ```
+  Average correctness across all questions attempted by the user.
+</Accordion>
+
+<Accordion title="2. Standard Deviation of Accuracy (std_acc)">
+  ```julia
+  std_acc = isnan(std(user_data.answered_correctly)) ? 0.0 : std(user_data.answered_correctly)
+  ```
+  Measures consistency in performance. Returns 0.0 for single-attempt users.
+</Accordion>
+
+<Accordion title="3. Number of Questions (num_questions)">
+  ```julia
+  num_questions = nrow(user_data)
+  ```
+  Total count of questions attempted - engagement metric.
+</Accordion>
+
+<Accordion title="4. Mean Time Between Questions (mean_time_between)">
+  ```julia
+  time_diffs = diff(user_data.timestamp)
+  mean_time_between = mean(time_diffs)
+  ```
+  Average time gap between consecutive questions - pacing indicator.
+</Accordion>
+
+<Accordion title="5. Std Time Between Questions (std_time_between)">
+  ```julia
+  std_time_between = isnan(std(time_diffs)) ? 0.0 : std(time_diffs)
+  ```
+  Consistency of pacing throughout learning sessions.
+</Accordion>
+
+<Accordion title="6. Recent Accuracy (recent_acc)">
+  ```julia
+  recent_acc = mean(user_data.answered_correctly[max(1, end-4):end])
+  ```
+  Performance on the last 5 questions - current state indicator.
+</Accordion>
+
+<Accordion title="7. Performance Trend (performance_trend)">
+  ```julia
+  if length(user_data.answered_correctly) >= 10
+      first_half = mean(user_data.answered_correctly[1:div(end,2)])
+      second_half = mean(user_data.answered_correctly[div(end,2)+1:end])
+      trend = second_half - first_half
+  else
+      trend = 0.0
+  end
+  ```
+  Change in accuracy from first half to second half of questions. Positive = improving.
+</Accordion>
+
+<Accordion title="8. Mean Container Accuracy (mean_container_acc)">
+  ```julia
+  container_acc = combine(groupby(user_data, :task_container_id), 
+      :answered_correctly => mean => :container_acc).container_acc
+  mean_container_acc = mean(container_acc)
+  ```
+  Average performance across different task containers (question sets).
+</Accordion>
+
+<Accordion title="9. Std Container Accuracy (std_container_acc)">
+  ```julia
+  std_container_acc = isnan(std(container_acc)) ? 0.0 : std(container_acc)
+  ```
+  Consistency across different question sets - domain versatility.
+</Accordion>
+
+<Accordion title="10. Explanation Impact (explanation_impact)">
+  ```julia
+  explanation_impact = 0.0
+  valid_explanations = 0
+  for i in 2:nrow(user_data)
+      if !ismissing(user_data.prior_question_had_explanation[i]) && user_data.prior_question_had_explanation[i]
+          explanation_impact += user_data.answered_correctly[i] - user_data.answered_correctly[i-1]
+          valid_explanations += 1
+      end
+  end
+  explanation_impact = valid_explanations > 0 ? explanation_impact / valid_explanations : 0.0
+  ```
+  Average change in correctness after receiving explanations. Measures learning from feedback.
+</Accordion>
+
+<Accordion title="11. Time-Accuracy Correlation (time_acc_correlation)">
+  ```julia
+  time_values = collect(skipmissing(user_data.prior_question_elapsed_time))
+  acc_values = float.(user_data.answered_correctly[.!ismissing.(user_data.prior_question_elapsed_time)])
+  
+  if length(time_values) > 1 && length(acc_values) > 1
+      time_acc_correlation = cor(time_values, acc_values)
+      time_acc_correlation = isnan(time_acc_correlation) ? 0.0 : time_acc_correlation
+  else
+      time_acc_correlation = 0.0
+  end
+  ```
+  Pearson correlation between time spent and correctness. Positive = more time helps.
+</Accordion>
+
+### Example Usage
+
+```julia
+# Prepare features from raw data
+X, y, user_features, feature_cols = prepare_features(df)
+
+# Check dimensions
+println("Feature matrix: ", size(X))  # (n_users, 11)
+println("Target vector: ", size(y))    # (n_users,)
+println("Features: ", feature_cols)
+```
+
+<Note>
+  All features are z-score normalized: `(X .- mean(X, dims=1)) ./ std(X, dims=1)`. This ensures features are on the same scale for modeling.
+</Note>
+
+---
+
+## scale_features()
+
+Standardizes features using z-score normalization (mean=0, std=1).
+
+### Signature
+
+```julia
+function scale_features(X)
+```
+
+### Parameters
+
+<ParamField path="X" type="Matrix{Float64}" required>
+  Raw feature matrix (n_samples × n_features)
+</ParamField>
+
+### Returns
+
+<ResponseField name="X_scaled" type="Matrix{Float64}">
+  Standardized feature matrix with same dimensions as input
+</ResponseField>
+
+### Implementation
+
+```julia
+function scale_features(X)
+    X_scaled = similar(X)
+    for i in 1:size(X, 2)
+        X_scaled[:, i] = (X[:, i] .- mean(X[:, i])) ./ std(X[:, i])
+    end
+    return X_scaled
+end
+```
+
+### Example Usage
+
+```julia
+X_raw = [1.0 10.0; 2.0 20.0; 3.0 30.0]
+X_scaled = scale_features(X_raw)
+
+# Each column now has mean ≈ 0 and std ≈ 1
+println(mean(X_scaled, dims=1))  # ≈ [0.0 0.0]
+println(std(X_scaled, dims=1))   # ≈ [1.0 1.0]
+```
+
+---
+
+## regularize_attempts()
+
+Applies L2 regularization specifically to the "number of attempts" feature to prevent it from dominating the model.
+
+### Signature
+
+```julia
+function regularize_attempts(X, λ=0.1)
+```
+
+### Parameters
+
+<ParamField path="X" type="Matrix{Float64}" required>
+  Feature matrix where column 3 contains the number of attempts
+</ParamField>
+
+<ParamField path="λ" type="Float64" default="0.1">
+  Regularization parameter - smaller values shrink the attempts feature more
+</ParamField>
+
+### Returns
+
+<ResponseField name="X_reg" type="Matrix{Float64}">
+  Feature matrix with column 3 scaled by λ
+</ResponseField>
+
+### Implementation
+
+```julia
+function regularize_attempts(X, λ=0.1)
+    X_reg = copy(X)
+    X_reg[:, 3] = X_reg[:, 3] * λ
+    return X_reg
+end
+```
+
+### Rationale
+
+<Note>
+  The number of attempts can vary drastically (10 vs 1000+) and can't be effectively z-score normalized when it dominates variance. Regularization shrinks this feature to prevent it from overshadowing other important signals like accuracy and consistency.
+</Note>
+
+### Example Usage
+
+```julia
+X = [0.75 0.43 120.0 45000.0 0.67;
+     0.82 0.38 150.0 38000.0 0.71]
+
+X_reg = regularize_attempts(X, 0.1)
+
+# Column 3 (attempts) is now scaled down
+# [0.75 0.43 12.0 45000.0 0.67;
+#  0.82 0.38 15.0 38000.0 0.71]
+```

@@ -1,0 +1,233 @@
+---
+title: 'Evaluation Functions'
+description: 'Functions for assessing model performance and generating confusion matrices'
+---
+
+## Overview
+
+Evaluation functions measure the quality of model predictions through accuracy metrics and detailed confusion matrix analysis. These functions are essential for understanding model performance on binary classification tasks.
+
+---
+
+## evaluate_model()
+
+Computes the accuracy of binary classification predictions.
+
+### Signature
+
+```julia
+function evaluate_model(y_true, y_pred)
+```
+
+### Parameters
+
+<ParamField path="y_true" type="Vector{Float64}" required>
+  Ground truth binary labels (0.0 or 1.0) of shape (n_samples,)
+</ParamField>
+
+<ParamField path="y_pred" type="Vector{Float64}" required>
+  Continuous predicted values of shape (n_samples,). Values are thresholded at 0.5 for binary classification.
+</ParamField>
+
+### Returns
+
+<ResponseField name="accuracy" type="Float64">
+  Classification accuracy as a decimal (0.0 to 1.0). Represents the proportion of correct predictions.
+</ResponseField>
+
+### Implementation
+
+```julia
+function evaluate_model(y_true, y_pred)
+    predictions = y_pred .>= 0.5
+    accuracy = mean(predictions .== y_true)
+    return accuracy
+end
+```
+
+### Algorithm
+
+1. **Threshold predictions**: Convert continuous predictions to binary using 0.5 threshold
+   - `y_pred >= 0.5` → predicted class 1 (high performer)
+   - `y_pred < 0.5` → predicted class 0 (needs intervention)
+
+2. **Compare to ground truth**: Check element-wise equality with `y_true`
+
+3. **Compute accuracy**: Calculate mean of correct predictions
+
+### Example Usage
+
+```julia
+# Train model and make predictions
+β = regularized_ls(X_train, y_train, 0.01)
+y_pred = predict(X_test, β)
+
+# Evaluate accuracy
+accuracy = evaluate_model(y_test, y_pred)
+println("Test Accuracy: ", round(accuracy * 100, digits=2), "%")
+
+# Output: Test Accuracy: 80.73%
+```
+
+<Note>
+  The 0.5 threshold is standard for balanced binary classification. For imbalanced datasets, you may want to adjust this threshold based on precision-recall tradeoffs.
+</Note>
+
+---
+
+## print_confusion_matrix_table()
+
+Generates and displays a detailed confusion matrix with performance metrics.
+
+### Signature
+
+```julia
+function print_confusion_matrix_table(X, y, β)
+```
+
+### Parameters
+
+<ParamField path="X" type="Matrix{Float64}" required>
+  Feature matrix of shape (n_samples, n_features)
+</ParamField>
+
+<ParamField path="y" type="Vector{Float64}" required>
+  Ground truth binary labels (0.0 or 1.0) of shape (n_samples,)
+</ParamField>
+
+<ParamField path="β" type="Vector{Float64}" required>
+  Trained model coefficients of shape (n_features,)
+</ParamField>
+
+### Output
+
+Prints a formatted confusion matrix table to stdout with:
+- **True Positives (TP)**: Correctly predicted high performers
+- **False Positives (FP)**: Incorrectly predicted as high performers
+- **True Negatives (TN)**: Correctly predicted students needing intervention
+- **False Negatives (FN)**: Missed students who are actually high performers
+- **Accuracy**: (TP + TN) / Total
+- **Precision**: TP / (TP + FP)
+
+### Implementation
+
+```julia
+function print_confusion_matrix_table(X, y, β)
+    y_pred_continuous = predict(X, β)
+    y_pred_binary = y_pred_continuous .>= 0.5
+    
+    # Compute confusion matrix elements
+    tp = sum((y .== 1) .& (y_pred_binary .== 1))
+    fp = sum((y .== 0) .& (y_pred_binary .== 1))
+    tn = sum((y .== 0) .& (y_pred_binary .== 0))
+    fn = sum((y .== 1) .& (y_pred_binary .== 0))
+    
+    total = tp + fp + tn + fn
+    p_total = sum(y .== 1)
+    n_total = sum(y .== 0)
+    
+    tp_pct = round(tp / total * 100, digits=2)
+    fp_pct = round(fp / total * 100, digits=2)
+    tn_pct = round(tn / total * 100, digits=2)
+    fn_pct = round(fn / total * 100, digits=2)
+    
+    accuracy = (tp + tn) / total
+    precision = tp / (tp + fp)
+    
+    println("Confusion Matrix:")
+    println("=================")
+    println("                 Predicted Negative    Predicted Positive    Total")
+    println("Actual Negative  $tn ($tn_pct%)        $fp ($fp_pct%)          $n_total")
+    println("Actual Positive  $fn ($fn_pct%)        $tp ($tp_pct%)          $p_total")
+    println("Total            $(tn + fn)            $(fp + tp)              $total")
+    println()
+    println("Metrics:")
+    println("=========")
+    println("Accuracy:  $(round(accuracy * 100, digits=2))%")
+    println("Precision: $(round(precision * 100, digits=2))%")
+end
+```
+
+### Example Usage
+
+```julia
+# Prepare data and train model
+X, y, user_features, feature_cols = prepare_features(df)
+X_train, y_train, X_test, y_test = split_data(X, y)
+β = regularized_ls(X_train, y_train, 0.01)
+
+# Print confusion matrix for test set
+print_confusion_matrix_table(X_test, y_test, β)
+```
+
+### Example Output
+
+```
+Confusion Matrix:
+=================
+                 Predicted Negative    Predicted Positive    Total
+Actual Negative  1247 (39.87%)        0 (0.0%)              1247
+Actual Positive  603 (19.27%)         1279 (40.86%)         1882
+Total            1850                  1279                  3129
+
+Metrics:
+=========
+Accuracy:  80.73%
+Precision: 100.0%
+```
+
+### Metrics Interpretation
+
+<Accordion title="Understanding the Confusion Matrix">
+  | Metric | Formula | Interpretation |
+  |--------|---------|----------------|
+  | **Accuracy** | (TP + TN) / Total | Overall correctness of predictions |
+  | **Precision** | TP / (TP + FP) | When model predicts high performer, how often is it correct? |
+  | **True Positive Rate (Recall)** | TP / (TP + FN) | What proportion of actual high performers are identified? |
+  | **False Positive Rate** | FP / (FP + TN) | What proportion of intervention-needing students are misclassified? |
+</Accordion>
+
+<Note>
+  In the project results, the model achieved:
+  - **80.7% accuracy**: Correctly classifies 4 out of 5 students
+  - **100% precision**: When predicting high performer, always correct (no false positives)
+  - **Trade-off**: High precision comes at cost of recall (some high performers are missed)
+</Note>
+
+### Educational Context
+
+<Accordion title="Why These Metrics Matter for Education">
+  **High Precision (100%) is valuable because:**
+  - No false alarms - educators don't waste time on students who don't need help
+  - Resources are efficiently allocated to students truly needing intervention
+  
+  **Lower Recall (trade-off) means:**
+  - Some high performers are incorrectly flagged as needing help
+  - This is acceptable - giving extra support to capable students is less costly than missing struggling students
+  
+  **For this application:**
+  - False positives (FP = 0) are minimized, which is ideal
+  - False negatives (FN = 603) exist but represent a conservative approach to intervention
+</Accordion>
+
+### Visualization Aid
+
+```julia
+using Plots
+
+# Extract confusion matrix elements
+y_pred = predict(X_test, β) .>= 0.5
+tp = sum((y_test .== 1) .& (y_pred .== 1))
+fp = sum((y_test .== 0) .& (y_pred .== 1))
+tn = sum((y_test .== 0) .& (y_pred .== 0))
+fn = sum((y_test .== 1) .& (y_pred .== 0))
+
+# Create heatmap
+heatmap(["Predicted Neg" "Predicted Pos"], 
+        ["Actual Neg", "Actual Pos"],
+        [tn fp; fn tp],
+        c=:blues,
+        xlabel="Predicted",
+        ylabel="Actual",
+        title="Confusion Matrix Heatmap")
+```

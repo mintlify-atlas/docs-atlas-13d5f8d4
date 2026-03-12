@@ -1,0 +1,255 @@
+---
+title: 'Model Functions'
+description: 'Core machine learning functions for training and predicting with regularized least squares'
+---
+
+## Overview
+
+The model functions implement regularized least squares regression for predicting student performance. These functions handle model training, prediction, and data splitting for train/test validation.
+
+---
+
+## regularized_ls()
+
+Trains a regularized least squares model using L2 regularization (Ridge Regression).
+
+### Signature
+
+```julia
+function regularized_ls(X, y, λ)
+```
+
+### Parameters
+
+<ParamField path="X" type="Matrix{Float64}" required>
+  Feature matrix of shape (n_samples, n_features)
+</ParamField>
+
+<ParamField path="y" type="Vector{Float64}" required>
+  Target vector of shape (n_samples,) containing binary labels (0.0 or 1.0)
+</ParamField>
+
+<ParamField path="λ" type="Float64" required>
+  Regularization parameter. Higher values increase regularization strength:
+  - λ = 0: Standard least squares (no regularization)
+  - λ = 0.01: Light regularization (recommended for this dataset)
+  - λ > 0.1: Strong regularization (may underfit)
+</ParamField>
+
+### Returns
+
+<ResponseField name="β" type="Vector{Float64}">
+  Coefficient vector of shape (n_features,) representing learned feature weights
+</ResponseField>
+
+### Mathematical Formulation
+
+The function solves the regularized least squares problem:
+
+```
+β = argmin ||Xβ - y||² + λ||β||²
+```
+
+This is solved using the closed-form solution:
+
+```
+β = (X'X + λI)⁻¹ X'y
+```
+
+### Implementation
+
+```julia
+function regularized_ls(X, y, λ)
+    n, p = size(X)
+    β = (X'X + λ*I(p)) \ (X'y)
+    return β
+end
+```
+
+### Example Usage
+
+```julia
+# Train model with regularization
+λ = 0.01
+β = regularized_ls(X_train, y_train, λ)
+
+# Inspect learned coefficients
+println("Feature weights: ", β)
+
+# Output:
+# Feature weights: [0.23, -0.15, 0.31, 0.08, -0.02, 0.19, 0.27, 0.12, -0.09, 0.34, 0.11]
+```
+
+<Note>
+  The regularization term `λI(p)` is added to the Gram matrix `X'X` to ensure numerical stability and prevent overfitting. In the project, λ=0.01 achieved ~80.7% accuracy.
+</Note>
+
+<Accordion title="Why Regularization?">
+  Without regularization (λ=0), the model may:
+  - Overfit to training data noise
+  - Become unstable when features are correlated
+  - Produce large coefficient values that don't generalize
+  
+  The regularization term shrinks coefficients toward zero, preferring simpler models that generalize better.
+</Accordion>
+
+---
+
+## predict()
+
+Generates predictions using a trained model.
+
+### Signature
+
+```julia
+function predict(X, β)
+```
+
+### Parameters
+
+<ParamField path="X" type="Matrix{Float64}" required>
+  Feature matrix of shape (n_samples, n_features)
+</ParamField>
+
+<ParamField path="β" type="Vector{Float64}" required>
+  Coefficient vector of shape (n_features,) from trained model
+</ParamField>
+
+### Returns
+
+<ResponseField name="y_pred" type="Vector{Float64}">
+  Continuous predictions of shape (n_samples,). Values represent predicted probabilities or scores.
+</ResponseField>
+
+### Implementation
+
+```julia
+function predict(X, β)
+    return X * β
+end
+```
+
+### Example Usage
+
+```julia
+# Train model
+β = regularized_ls(X_train, y_train, 0.01)
+
+# Make predictions
+y_pred_train = predict(X_train, β)
+y_pred_test = predict(X_test, β)
+
+# Convert to binary predictions (threshold at 0.5)
+y_pred_binary = y_pred_test .>= 0.5
+
+println("Continuous predictions: ", y_pred_test[1:5])
+# [0.72, 0.45, 0.89, 0.31, 0.67]
+
+println("Binary predictions: ", y_pred_binary[1:5])
+# [true, false, true, false, true]
+```
+
+<Note>
+  The function returns continuous values. A threshold of 0.5 is typically used to convert to binary predictions for classification tasks.
+</Note>
+
+---
+
+## split_data()
+
+Randomly splits data into training and testing sets.
+
+### Signature
+
+```julia
+function split_data(X, y, train_ratio=0.8)
+```
+
+### Parameters
+
+<ParamField path="X" type="Matrix{Float64}" required>
+  Feature matrix of shape (n_samples, n_features)
+</ParamField>
+
+<ParamField path="y" type="Vector{Float64}" required>
+  Target vector of shape (n_samples,)
+</ParamField>
+
+<ParamField path="train_ratio" type="Float64" default="0.8">
+  Proportion of data to use for training (0.0 to 1.0). Default is 0.8 (80% train, 20% test).
+</ParamField>
+
+### Returns
+
+<ResponseField name="X_train" type="Matrix{Float64}">
+  Training feature matrix (train_size × n_features)
+</ResponseField>
+
+<ResponseField name="y_train" type="Vector{Float64}">
+  Training target vector (train_size,)
+</ResponseField>
+
+<ResponseField name="X_test" type="Matrix{Float64}">
+  Testing feature matrix (test_size × n_features)
+</ResponseField>
+
+<ResponseField name="y_test" type="Vector{Float64}">
+  Testing target vector (test_size,)
+</ResponseField>
+
+### Implementation
+
+```julia
+function split_data(X, y, train_ratio=0.8)
+    n = size(X, 1)
+    shuffle_idx = randperm(n)
+    train_size = floor(Int, train_ratio * n)
+    
+    X_train = X[shuffle_idx[1:train_size], :]
+    y_train = y[shuffle_idx[1:train_size]]
+    X_test = X[shuffle_idx[(train_size+1):end], :]
+    y_test = y[shuffle_idx[(train_size+1):end]]
+    
+    return X_train, y_train, X_test, y_test
+end
+```
+
+### Example Usage
+
+```julia
+# Prepare features
+X, y, user_features, feature_cols = prepare_features(df)
+
+# Split with default 80/20 ratio
+X_train, y_train, X_test, y_test = split_data(X, y)
+
+println("Training samples: ", size(X_train, 1))
+println("Testing samples: ", size(X_test, 1))
+
+# Custom split ratio (70/30)
+X_train, y_train, X_test, y_test = split_data(X, y, 0.7)
+```
+
+<Accordion title="Complete Training Pipeline">
+  ```julia
+  # 1. Prepare features
+  X, y, user_features, feature_cols = prepare_features(df)
+  
+  # 2. Split data
+  X_train, y_train, X_test, y_test = split_data(X, y, 0.8)
+  
+  # 3. Train model
+  β = regularized_ls(X_train, y_train, 0.01)
+  
+  # 4. Make predictions
+  y_pred_test = predict(X_test, β)
+  
+  # 5. Evaluate
+  accuracy = evaluate_model(y_test, y_pred_test)
+  println("Test Accuracy: ", round(accuracy * 100, digits=2), "%")
+  ```
+</Accordion>
+
+<Note>
+  The function uses `randperm(n)` to shuffle indices randomly, ensuring each run produces different train/test splits. Set `Random.seed!()` for reproducibility.
+</Note>

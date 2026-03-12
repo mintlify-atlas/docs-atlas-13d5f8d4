@@ -1,0 +1,189 @@
+---
+title: Visualizations
+description: Interactive and static visualizations revealing student performance patterns and clustering analysis
+---
+
+## 3D Clustering Visualization
+
+The primary visualization displays student clusters in three-dimensional space, revealing the relationship between performance, consistency, and engagement.
+
+### Interactive 3D Scatter Plot
+
+<Card title="KMeans.html - Interactive Plot" icon="cube" href="https://github.com/jackie-0110/online-edu-logs-analysis/blob/main/KMeans.html">
+  Explore the interactive 3D visualization of student clusters with PlotlyJS
+</Card>
+
+### Visualization Dimensions
+
+The 3D scatter plot maps students across three critical dimensions:
+
+<CardGroup cols={3}>
+  <Card title="X-Axis" icon="arrows-left-right">
+    **Mean Accuracy**
+    
+    Overall correctness rate
+  </Card>
+  <Card title="Y-Axis" icon="arrows-up-down">
+    **Std Dev Accuracy**
+    
+    Performance consistency
+  </Card>
+  <Card title="Z-Axis" icon="arrow-up-z-a">
+    **Number of Attempts**
+    
+    Student engagement level
+  </Card>
+</CardGroup>
+
+<Info>
+  Points are colored by cluster assignment, revealing 20 distinct performance groups across the student population.
+</Info>
+
+## Visualization Code
+
+The visualization was created using Julia's Plots.jl library with the GR backend:
+
+```julia
+using Clustering
+K = 20
+results = kmeans(X', K; maxiter=20)
+assignments = results.assignments
+
+gr()
+
+X_3d = X[:, [1, 2, 3]]
+
+p2 = Plots.scatter(X_3d[:, 1], X_3d[:, 2], X_3d[:, 3],
+    zcolor = assignments,
+    markersize = 3,
+    xlabel = "Mean Accuracy",
+    ylabel = "Std Dev Accuracy",
+    zlabel = "Number of Attempts",
+    title = "Student Clusters: Performance vs Engagement",
+    colorbar_title = "Cluster",
+    legend = false
+)
+
+display(p2)
+```
+
+<Note>
+  The `zcolor` parameter maps cluster assignments to colors, making it easy to identify distinct performance groups visually.
+</Note>
+
+## Elbow Method Visualization
+
+To determine the optimal number of clusters (K), the elbow method was employed by plotting the Sum of Squared Errors (SSE) against different values of K.
+
+### Choosing K
+
+<Accordion title="Elbow Method Implementation">
+  The elbow method calculates the within-cluster sum of squares for K values from 1 to 20:
+  
+  ```julia
+  m, n = size(X)
+  J = zeros(K)
+  for k in 1:K
+      result = kmeans(X', k; maxiter=100)
+      assignments = result.assignments
+      centers = result.centers
+      J[k] = sum(norm(X[i,:] - centers[:, assignments[i]], 2)^2 for i in 1:m)
+  end
+  
+  p3 = Plots.plot(1:K, J, marker=:circle, 
+      xlabel="k", ylabel="SSE", 
+      title="SSE vs. k (Elbow Method)", 
+      legend=false)
+  display(p3)
+  ```
+</Accordion>
+
+### Interpretation
+
+The elbow plot shows SSE decreasing as K increases, with the "elbow" point indicating the optimal balance between:
+
+- **Model Complexity**: Fewer clusters are simpler to interpret
+- **Fit Quality**: More clusters capture finer performance distinctions
+
+<Info>
+  The choice of K=20 provides sufficient granularity to identify diverse performance groups while maintaining interpretability for educators.
+</Info>
+
+## PlotlyJS for Interactivity
+
+For the interactive KMeans.html visualization, PlotlyJS.jl was used to enable:
+
+<CardGroup cols={2}>
+  <Card title="Rotation" icon="rotate">
+    3D rotation to view clusters from any angle
+  </Card>
+  <Card title="Zoom" icon="magnifying-glass">
+    Zoom in/out to examine specific regions
+  </Card>
+  <Card title="Hover Info" icon="hand-pointer">
+    Tooltip data on individual students
+  </Card>
+  <Card title="Legend" icon="list">
+    Toggle cluster visibility
+  </Card>
+</CardGroup>
+
+```julia
+using PlotlyJS
+```
+
+<Note>
+  PlotlyJS generates standalone HTML files that can be shared and explored without requiring Julia or any server infrastructure.
+</Note>
+
+## Visualization Features
+
+### Color Mapping
+
+Each of the 20 clusters is assigned a unique color from the colorbar, making it easy to:
+
+- Identify cluster membership visually
+- Track performance patterns across dimensions
+- Spot outliers or unusual groupings
+
+### Marker Sizing
+
+```julia
+markersize = 3
+```
+
+Small markers ensure that dense regions remain visible and individual points don't overlap excessively.
+
+### Axis Labels
+
+Clear axis labels provide immediate context:
+
+- **Mean Accuracy**: Indicates overall performance level
+- **Std Dev Accuracy**: Shows consistency vs. variability
+- **Number of Attempts**: Reflects engagement and persistence
+
+<Info>
+  The combination of these three dimensions captures both ability (accuracy), consistency (std dev), and effort (attempts), providing a holistic view of student performance.
+</Info>
+
+## Technical Details
+
+### Graphics Backend
+
+The GR backend was selected for its speed and quality:
+
+```julia
+gr()
+```
+
+### Data Preparation
+
+Features were scaled and regularized before clustering:
+
+- **Z-score normalization**: Ensures equal feature contribution
+- **Regularization**: Prevents dominance by large-scale features like number of attempts
+- **Missing value handling**: NaN and Inf values replaced with 0
+
+<Note>
+  Proper data preparation is critical for meaningful clustering results, as K-Means is sensitive to feature scales.
+</Note>

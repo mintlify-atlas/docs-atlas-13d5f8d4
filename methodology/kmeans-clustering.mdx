@@ -1,0 +1,242 @@
+---
+title: 'K-Means Clustering'
+description: 'Unsupervised learning approach to identify student performance groups using K=20 clusters'
+---
+
+## Overview
+
+K-Means clustering was applied to segment students into distinct performance groups based on their learning behavior and outcomes. This unsupervised approach reveals natural groupings in the data without requiring labeled examples.
+
+<Info>
+The k-means clustering revealed performance groups by capturing variation in **accuracy**, **standard deviation**, and **number of attempts**.
+</Info>
+
+## Algorithm Configuration
+
+### Hyperparameters
+
+<CardGroup cols={2}>
+  <Card title="Number of Clusters" icon="layer-group">
+    **K = 20**
+    
+    Chosen using the elbow method to balance granularity and interpretability
+  </Card>
+  <Card title="Max Iterations" icon="arrows-spin">
+    **maxiter = 20**
+    
+    Sufficient for convergence on this dataset
+  </Card>
+</CardGroup>
+
+## Feature Space
+
+The clustering algorithm operates on a 3-dimensional feature space:
+
+1. **Mean Accuracy** - Average correctness across all question attempts
+2. **Standard Deviation of Accuracy** - Consistency and variability in performance
+3. **Number of Attempts** - Student engagement and persistence
+
+<Note>
+These three features were selected for their ability to capture both **performance quality** (mean accuracy), **consistency** (std deviation), and **engagement** (attempts).
+</Note>
+
+## Implementation
+
+The K-means clustering was implemented using Julia's `Clustering.jl` library:
+
+```julia
+using Clustering
+
+# Set number of clusters
+K = 20
+
+# Run k-means clustering
+results = kmeans(X', K; maxiter=20)
+assignments = results.assignments
+```
+
+<Accordion title="Understanding the Code">
+- `X'` - Transpose of feature matrix (k-means expects features in rows)
+- `K` - Number of clusters to create
+- `maxiter` - Maximum iterations for convergence
+- `assignments` - Vector of cluster labels for each student
+- `results.centers` - Centroids of the K clusters
+</Accordion>
+
+## 3D Visualization
+
+A 3D scatter plot visualizes the clustering results in the feature space:
+
+```julia
+using Plots
+gr()
+
+# Extract 3D features: mean_acc, std_acc, num_attempted
+X_3d = X[:, [1, 2, 3]]
+
+# Create 3D scatter plot colored by cluster assignment
+p2 = Plots.scatter(X_3d[:, 1], X_3d[:, 2], X_3d[:, 3],
+    zcolor = assignments,
+    markersize = 3,
+    xlabel = "Mean Accuracy",
+    ylabel = "Std Dev Accuracy",
+    zlabel = "Number of Attempts",
+    title = "Student Clusters: Performance vs Engagement",
+    colorbar_title = "Cluster",
+    legend = false
+)
+
+display(p2)
+```
+
+<Info>
+The 3D visualization allows educators to see how different performance groups are distributed across accuracy, consistency, and engagement dimensions.
+</Info>
+
+## Elbow Method for Choosing K
+
+The optimal number of clusters was determined using the elbow method, which plots the Sum of Squared Errors (SSE) against different values of K:
+
+```julia
+# Elbow method to determine optimal K
+m, n = size(X)
+J = zeros(K)
+
+for k in 1:K
+    result = kmeans(X', k; maxiter=100)
+    assignments = result.assignments
+    centers = result.centers
+    
+    # Calculate SSE for this K
+    J[k] = sum(norm(X[i,:] - centers[:, assignments[i]], 2)^2 for i in 1:m)
+end
+
+# Plot SSE vs K
+p3 = Plots.plot(1:K, J, marker=:circle, 
+    xlabel="k", ylabel="SSE", 
+    title="SSE vs. k (Elbow Method)", 
+    legend=false)
+display(p3)
+```
+
+<Accordion title="Understanding the Elbow Method">
+The elbow method works by:
+
+1. **Computing SSE** for K = 1, 2, ..., 20
+2. **Plotting SSE vs K** to visualize the trade-off
+3. **Finding the "elbow"** - the point where adding more clusters provides diminishing returns
+
+The SSE formula used:
+```
+SSE = Σ ||x_i - c_k||²
+```
+Where:
+- `x_i` is the i-th data point
+- `c_k` is the centroid of cluster k that x_i belongs to
+- `||·||²` is the squared Euclidean distance
+</Accordion>
+
+## Feature Preprocessing
+
+Before clustering, features were extracted and scaled:
+
+```julia
+# Group by user_id and aggregate features
+grouped = combine(groupby(df[df.content_type_id .== 0, :], :user_id), 
+  :answered_correctly => mean => :mean_acc,
+  :answered_correctly => (x -> isnan(std(x)) ? 0.0 : std(x)) => :std_acc,
+  :answered_correctly => length => :num_attempted,
+  :prior_question_elapsed_time => (x -> mean(skipmissing(x))) => :avg_time,
+  :prior_question_had_explanation => (x -> mean(skipmissing(x))) => :mean_explained 
+)
+grouped = dropmissing(grouped)
+
+# Create feature matrix
+X = Matrix(grouped[:, [:mean_acc, :std_acc, :num_attempted, :avg_time, :mean_explained]])
+replace!(X, Inf=>0); replace!(X, NaN=>0)
+```
+
+### Feature Scaling
+
+Two scaling techniques were applied:
+
+<Tabs>
+  <Tab title="Z-Score Normalization">
+    ```julia
+    # Scale features using z-score normalization
+    function scale_features(X)
+        X_scaled = similar(X)
+        for i in 1:size(X, 2)
+            X_scaled[:, i] = (X[:, i] .- mean(X[:, i])) ./ std(X[:, i])
+        end
+        return X_scaled
+    end
+    ```
+    
+    Standard normalization: `z = (x - μ) / σ`
+  </Tab>
+  
+  <Tab title="Attempt Regularization">
+    ```julia
+    # Regularization of the attempts as they can't be scaled with z-score
+    function regularize_attempts(X, λ=0.1)
+        X_reg = copy(X)
+        X_reg[:, 3] = X_reg[:, 3] * λ
+        return X_reg
+    end
+    ```
+    
+    Special handling for count-based features
+  </Tab>
+</Tabs>
+
+<Note>
+The number of attempts requires special regularization because it's a count variable that doesn't follow a normal distribution like accuracy metrics.
+</Note>
+
+## Interpretation
+
+The resulting 20 clusters represent distinct student segments:
+
+### High-Performing Clusters
+- High mean accuracy
+- Low standard deviation (consistent)
+- Variable engagement levels
+
+### Struggling Clusters
+- Low mean accuracy
+- High standard deviation (inconsistent)
+- Often high attempts (repeated efforts)
+
+### Intermediate Clusters
+- Medium accuracy
+- Various consistency levels
+- Different engagement patterns
+
+<Info>
+Educators can use cluster assignments to identify which students need intervention and what type of support would be most effective based on their cluster characteristics.
+</Info>
+
+## Key Insights
+
+The K-means clustering analysis revealed:
+
+1. **Performance groups are naturally separable** in the 3D feature space
+2. **Consistency matters** - standard deviation is as important as mean accuracy
+3. **Engagement varies** - some struggling students attempt more, others disengage
+4. **K=20 provides granularity** for targeted interventions while remaining interpretable
+
+## Integration with Regression Model
+
+While clustering provides exploratory insights, it complements the [Regularized Least Squares](/methodology/regularized-least-squares) model which:
+
+- Predicts specific student outcomes
+- Uses a richer 11-feature space
+- Provides probabilistic success predictions
+- Achieves 80.7% accuracy with 100% precision
+
+<CardGroup cols={1}>
+  <Card title="Next: Regularized Least Squares" icon="arrow-right" href="/methodology/regularized-least-squares">
+    Learn about the supervised regression approach that predicts student success
+  </Card>
+</CardGroup>

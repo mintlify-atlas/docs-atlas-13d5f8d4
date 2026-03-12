@@ -1,0 +1,161 @@
+---
+title: 'Research Abstract'
+description: 'Detailed abstract and methodology summary for the online education logs analysis project'
+---
+
+# Research Abstract
+
+## Purpose and Objectives
+
+The purpose of this research is to accurately make predictions on student performance to tailor education to individual ability levels. By analyzing large-scale educational log data from Riiid, an AI EdTech company based in South Korea, we aim to enable higher efficiency in education that improves student outcomes and opens doors for social mobility.
+
+<Note>
+  Meeting students with support for exactly where they're struggling is an efficient use of both the student and educators' time. This research is important to educators, students, parents, and nearly everyone with a stake in education.
+</Note>
+
+## Methodology
+
+The analysis was implemented entirely within **Julia**, leveraging powerful libraries for data processing and machine learning:
+
+<CardGroup cols={2}>
+  <Card title="Data Processing" icon="table" color="#3B82F6">
+    - **DataFrames.jl** - Data manipulation
+    - **CSV.jl** - Data loading
+    - **Statistics.jl** - Statistical analysis
+  </Card>
+  <Card title="Machine Learning" icon="brain" color="#60A5FA">
+    - **Clustering.jl** - K-Means implementation
+    - **LinearAlgebra.jl** - Matrix operations
+    - **Random.jl** - Data sampling
+  </Card>
+</CardGroup>
+
+### Visualization
+
+**PlotlyJS.jl** was used for creating interactive 3D visualizations of the clustering results.
+
+<Info>
+  View the [interactive 3D KMeans plot](https://github.com/jackie-0110/online-edu-logs-analysis/blob/main/KMeans.html) to explore student performance clusters.
+</Info>
+
+## Approach
+
+Two complementary machine learning techniques were implemented:
+
+### 1. K-Means Clustering
+
+<Steps>
+  <Step title="Feature Selection">
+    Selected key features: mean accuracy, standard deviation in performance, and number of attempts
+  </Step>
+  <Step title="Clustering">
+    Applied K-Means algorithm to identify distinct performance groups
+  </Step>
+  <Step title="Validation">
+    Used elbow method to determine optimal number of clusters
+  </Step>
+  <Step title="Analysis">
+    Revealed performance groups by capturing variation in accuracy, consistency, and engagement
+  </Step>
+</Steps>
+
+The K-Means clustering successfully identified distinct student groups based on:
+- **Accuracy** - Overall performance on questions
+- **Standard Deviation** - Consistency in performance
+- **Number of Attempts** - Engagement and persistence patterns
+
+### 2. Regularized Least Squares Model
+
+<Steps>
+  <Step title="Feature Engineering">
+    Created comprehensive features including mean accuracy, consistency trends, performance trajectory, and tutorial effectiveness
+  </Step>
+  <Step title="Model Training">
+    Trained regularized least squares model with λ=0.01 to prevent overfitting
+  </Step>
+  <Step title="Evaluation">
+    Assessed model performance using accuracy and precision metrics
+  </Step>
+</Steps>
+
+Feature engineering was critical to model success, incorporating metrics such as:
+- Mean accuracy and consistency trends
+- Recent performance vs. historical performance
+- Time between attempts and time-accuracy correlation
+- Tutorial explanation effectiveness
+- Performance trend over time
+
+## Key Findings
+
+<CardGroup cols={2}>
+  <Card title="Accuracy" icon="bullseye" color="#3B82F6">
+    ### ~80.7%
+    Overall accuracy in predicting student success
+  </Card>
+  <Card title="Precision" icon="check-circle" color="#60A5FA">
+    ### 100%
+    Precision in identifying students who need intervention
+  </Card>
+</CardGroup>
+
+### Model Performance
+
+The regularized least squares model with **λ=0.01** achieved:
+- **~80.7% accuracy** in predicting whether a student will perform above or below the median
+- **100% precision** in predicting student success (no false positives)
+
+These metrics demonstrate that the model can reliably identify students who need support without incorrectly flagging successful students.
+
+### Clustering Insights
+
+The K-Means clustering revealed distinct performance groups, enabling:
+- Identification of students with consistent high performance
+- Detection of struggling students with low accuracy and high variability
+- Recognition of engaged students (high attempt counts) who may need different support
+- Understanding of consistency patterns that indicate stable vs. unstable performance
+
+## Implications
+
+<Note>
+  These findings suggest that **predictive modeling with performance-based clustering** can support the development of personalized education strategies, since educators can reliably determine whether a student needs help or falls within a performance group that is classified as intervention needing.
+</Note>
+
+### Educational Impact
+
+1. **Early Intervention** - Identify struggling students before they fall too far behind
+2. **Resource Optimization** - Allocate educator time and support to students who need it most
+3. **Personalized Learning** - Tailor educational content and pacing to student performance groups
+4. **Outcome Prediction** - Anticipate student success and adjust strategies accordingly
+
+### Practical Applications
+
+<CardGroup cols={2}>
+  <Card title="For Educators" icon="chalkboard-user" color="#1E40AF">
+    Use clustering to identify which students need targeted support and what type of intervention may be most effective
+  </Card>
+  <Card title="For EdTech Platforms" icon="laptop-code" color="#3B82F6">
+    Integrate predictive models to provide real-time recommendations and adaptive learning paths
+  </Card>
+  <Card title="For Institutions" icon="building-columns" color="#60A5FA">
+    Monitor cohort performance trends and allocate resources based on data-driven insights
+  </Card>
+  <Card title="For Students" icon="user-graduate" color="#1E40AF">
+    Receive personalized feedback and resources based on individual performance patterns
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+Explore the detailed implementation and technical approach:
+
+<CardGroup cols={3}>
+  <Card title="Data Preparation" icon="database" href="/data-preparation">
+    Learn about the Riiid dataset structure
+  </Card>
+  <Card title="Feature Engineering" icon="wrench" href="/implementation/feature-engineering">
+    Understand the feature creation process
+  </Card>
+  <Card title="Model Training" icon="code" href="/implementation/model-training">
+    Review the Julia code and algorithms
+  </Card>
+</CardGroup>

@@ -1,0 +1,125 @@
+---
+title: 'Methodology Overview'
+description: 'Summary of analytical approaches used in the Online Education Logs Analysis project'
+---
+
+## Introduction
+
+This project implements two complementary machine learning techniques to analyze student performance and predict educational outcomes from RIIID online education logs:
+
+1. **K-Means Clustering** - Unsupervised learning to identify student performance groups
+2. **Regularized Least Squares** - Supervised learning to predict student success
+
+<Info>
+Both approaches work together to support personalized education strategies by identifying students who need intervention and predicting their performance accurately.
+</Info>
+
+## Analytical Approach
+
+The analysis was implemented entirely in Julia, utilizing libraries including:
+- `DataFrames.jl` - Data manipulation
+- `Statistics.jl` - Statistical operations
+- `LinearAlgebra.jl` - Matrix operations
+- `Clustering.jl` - K-means implementation
+- `CSV.jl` - Data loading
+- `Random.jl` - Random sampling
+- `PlotlyJS.jl` - 3D visualization
+
+## Feature Engineering
+
+Before applying the models, extensive feature engineering was performed on the raw education logs:
+
+### Core Performance Metrics
+- **Mean Accuracy** - Average correctness across all attempts
+- **Standard Deviation of Accuracy** - Consistency in performance
+- **Number of Attempts** - Student engagement level
+- **Recent Accuracy** - Performance on last 5 questions
+- **Performance Trend** - Improvement or decline over time
+
+### Time-Based Features
+- **Average Time Between Questions** - Learning pace
+- **Standard Deviation of Time** - Consistency in pace
+- **Time-Accuracy Correlation** - Relationship between speed and correctness
+
+### Advanced Features
+- **Container Accuracy** - Performance grouped by task containers
+- **Explanation Impact** - Effectiveness of tutorial explanations
+- **Mean Explained** - Usage rate of explanations
+
+<Note>
+All features undergo normalization using z-score scaling: `(X - μ) / σ` to ensure fair comparison across different scales.
+</Note>
+
+## Two-Pronged Methodology
+
+### K-Means Clustering
+
+The unsupervised approach groups students into K=20 clusters based on their performance characteristics.
+
+**Key Results:**
+- Reveals distinct performance groups
+- Captures variation in accuracy, consistency, and engagement
+- Enables 3D visualization of student segments
+
+[Learn more about K-Means Clustering →](/methodology/kmeans-clustering)
+
+### Regularized Least Squares
+
+The supervised approach predicts whether students will succeed (above-median performance).
+
+**Key Results:**
+- **80.7% accuracy** in predicting student success
+- **100% precision** in identifying high performers
+- Regularization parameter λ=0.01 prevents overfitting
+
+[Learn more about Regularized Least Squares →](/methodology/regularized-least-squares)
+
+## Model Performance
+
+<Accordion title="Performance Metrics">
+The regularized least squares model achieved:
+
+- **Accuracy**: 80.7% - correctly classifies most students
+- **Precision**: 100% - when predicting success, always correct
+- **Feature Space**: 11 engineered features
+- **Train/Test Split**: 80/20 ratio
+
+These metrics demonstrate that predictive modeling with performance-based clustering can reliably support educators in determining which students need intervention.
+</Accordion>
+
+## Data Preparation
+
+The dataset underwent several preprocessing steps:
+
+1. **Random Sampling** - 1% of the full RIIID dataset for computational efficiency
+2. **Content Filtering** - Only question interactions (content_type_id == 0)
+3. **Feature Aggregation** - Group by user_id to create per-student metrics
+4. **Missing Value Handling** - Replace NaN, Inf, and missing values with 0
+5. **Normalization** - Z-score scaling for all features
+6. **Target Creation** - Binary classification based on median accuracy threshold
+
+## Implementation Highlights
+
+Both methodologies were implemented with careful attention to:
+
+- **Scalability** - Chunk-based CSV processing for large files
+- **Numerical Stability** - Regularization and proper handling of edge cases
+- **Interpretability** - Clear feature definitions and visualization
+- **Validation** - Proper train/test splitting and evaluation metrics
+
+<Info>
+The combination of clustering and regression provides both exploratory insights and predictive power for educational intervention strategies.
+</Info>
+
+## Next Steps
+
+Explore the detailed methodology pages:
+
+<CardGroup cols={2}>
+  <Card title="K-Means Clustering" icon="chart-scatter" href="/methodology/kmeans-clustering">
+    Learn about the unsupervised clustering approach with K=20
+  </Card>
+  <Card title="Regularized Least Squares" icon="chart-line" href="/methodology/regularized-least-squares">
+    Understand the supervised regression model with λ=0.01
+  </Card>
+</CardGroup>

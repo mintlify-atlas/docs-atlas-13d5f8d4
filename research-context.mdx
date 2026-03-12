@@ -1,0 +1,212 @@
+---
+title: 'Research Context'
+description: 'Educational impact, Riiid dataset background, and the broader context of AI in personalized learning'
+---
+
+# Research Context and Educational Impact
+
+## The Challenge in Modern Education
+
+Education systems worldwide face a persistent challenge: how to provide personalized support to students at scale. Traditional one-size-fits-all approaches leave many students behind, while individualized tutoring is resource-intensive and often inaccessible.
+
+<Info>
+  This project addresses the gap by using machine learning to identify student struggles and predict performance outcomes, enabling efficient and scalable personalized education.
+</Info>
+
+## About Riiid
+
+**Riiid** is an AI EdTech company based in South Korea that focuses on leveraging artificial intelligence to transform education. The company develops AI-powered learning platforms that adapt to individual student needs and optimize educational outcomes.
+
+<CardGroup cols={2}>
+  <Card title="Mission" icon="bullseye" color="#3B82F6">
+    Enable efficient, personalized education through AI technology
+  </Card>
+  <Card title="Focus" icon="brain" color="#60A5FA">
+    Develop adaptive learning systems that respond to student performance in real-time
+  </Card>
+  <Card title="Impact" icon="globe" color="#1E40AF">
+    Improve student outcomes and create opportunities for social mobility
+  </Card>
+  <Card title="Technology" icon="robot" color="#3B82F6">
+    Use large-scale educational data and machine learning to optimize learning paths
+  </Card>
+</CardGroup>
+
+### Why Riiid Data?
+
+Riiid's educational platform generates rich interaction logs that capture:
+- Student responses to questions
+- Time spent on each question
+- Tutorial and explanation usage
+- Performance patterns over time
+- Engagement metrics
+
+This comprehensive data enables researchers to build predictive models that understand student behavior at a granular level.
+
+## The Problem Domain
+
+### Student Performance Prediction
+
+<Note>
+  The core challenge is to **accurately predict student performance** to tailor education to individual ability levels. This requires understanding not just what students know, but how they learn and where they struggle.
+</Note>
+
+#### Key Questions Addressed
+
+<Steps>
+  <Step title="Who needs help?">
+    Identify students who are struggling or at risk of falling behind
+  </Step>
+  <Step title="What type of help?">
+    Understand whether students need more practice, different explanations, or fundamental concept review
+  </Step>
+  <Step title="When to intervene?">
+    Detect performance issues early enough to make a difference
+  </Step>
+  <Step title="How effective?">
+    Measure the impact of interventions like tutorials and explanations
+  </Step>
+</Steps>
+
+## Educational Impact
+
+### Improving Student Outcomes
+
+<CardGroup cols={2}>
+  <Card title="Higher Efficiency" icon="bolt" color="#3B82F6">
+    By identifying exactly where students struggle, educators can provide targeted support rather than generic review
+  </Card>
+  <Card title="Better Outcomes" icon="chart-line" color="#60A5FA">
+    Students who receive timely, personalized support show improved performance and engagement
+  </Card>
+  <Card title="Social Mobility" icon="arrow-up" color="#1E40AF">
+    Improved educational outcomes create opportunities for students regardless of background
+  </Card>
+  <Card title="Resource Optimization" icon="clock" color="#3B82F6">
+    Efficient use of both student and educator time maximizes learning impact
+  </Card>
+</CardGroup>
+
+### Stakeholder Benefits
+
+#### For Educators
+
+- **Early Detection** - Identify struggling students before they fall too far behind
+- **Data-Driven Decisions** - Use concrete performance metrics rather than intuition alone
+- **Efficient Time Use** - Focus attention on students who need it most
+- **Intervention Planning** - Understand what type of support each student needs
+
+#### For Students
+
+- **Personalized Learning** - Receive content and support tailored to individual needs
+- **Timely Support** - Get help when and where it's needed most
+- **Better Outcomes** - Improve performance through targeted interventions
+- **Increased Engagement** - Experience learning that adapts to personal pace and style
+
+#### For Parents
+
+- **Visibility** - Understand how their child is performing and where they need support
+- **Confidence** - Trust that struggling students will be identified and helped
+- **Communication** - Have concrete data to discuss with educators
+
+#### For Institutions
+
+- **Outcome Improvement** - Boost overall student performance metrics
+- **Resource Allocation** - Distribute support staff and tutoring resources efficiently
+- **Retention** - Reduce dropout rates by supporting at-risk students
+- **Accountability** - Demonstrate data-driven approaches to education
+
+## The Broader Context: AI in Education
+
+<Info>
+  This research contributes to the growing field of **AI-powered personalized learning**, where machine learning models analyze student data to optimize educational experiences.
+</Info>
+
+### Why This Research Matters
+
+1. **Scalability** - Machine learning enables personalized education at scale, serving thousands or millions of students
+2. **Objectivity** - Data-driven models remove bias and provide consistent evaluation
+3. **Early Detection** - Predictive models identify issues before they become critical
+4. **Continuous Improvement** - Models learn from new data and improve over time
+
+### Real-World Applications
+
+<CardGroup cols={2}>
+  <Card title="Adaptive Learning Platforms" icon="laptop" color="#3B82F6">
+    Online education platforms can adjust content difficulty and pacing in real-time based on student performance
+  </Card>
+  <Card title="Intervention Systems" icon="hand-holding-heart" color="#60A5FA">
+    Schools can implement automated alerting when students show signs of struggle
+  </Card>
+  <Card title="Resource Planning" icon="calendar-days" color="#1E40AF">
+    Institutions can forecast tutoring and support needs based on predicted student performance
+  </Card>
+  <Card title="Curriculum Optimization" icon="book-open" color="#3B82F6">
+    Educators can identify which topics or question types cause the most difficulty and adjust teaching accordingly
+  </Card>
+</CardGroup>
+
+## Key Insights from This Research
+
+### 1. Performance Groups Exist
+
+The K-Means clustering revealed distinct groups of students with different performance characteristics. This validates the approach of tailoring education to different student segments rather than treating all students identically.
+
+### 2. High Precision is Achievable
+
+<Note>
+  With **100% precision** in predicting student success, the model avoids false positives - meaning we don't incorrectly flag successful students as needing intervention. This is critical for efficient resource allocation.
+</Note>
+
+### 3. Multiple Factors Matter
+
+Student success depends on more than just raw accuracy. The research shows that:
+- **Consistency** (standard deviation) indicates stable vs. unstable performance
+- **Engagement** (number of attempts) reflects motivation and persistence
+- **Tutorial effectiveness** varies by student
+- **Performance trends** reveal whether students are improving or declining
+
+### 4. Feature Engineering is Critical
+
+The ~80.7% accuracy was achieved through careful feature engineering that captured:
+- Recent performance vs. historical trends
+- Time-accuracy correlations
+- Container-level (task group) performance patterns
+- Tutorial explanation impact
+
+This demonstrates that domain knowledge and thoughtful feature design are essential for effective predictive modeling.
+
+## Future Directions
+
+This research opens several avenues for future work:
+
+<Steps>
+  <Step title="Real-Time Prediction">
+    Implement streaming models that update predictions as students complete each question
+  </Step>
+  <Step title="Intervention Testing">
+    Conduct experiments to validate that targeted interventions based on these predictions improve outcomes
+  </Step>
+  <Step title="Explainability">
+    Develop interpretable models that explain why a student is predicted to struggle
+  </Step>
+  <Step title="Multi-Domain">
+    Apply these techniques to different subjects and educational contexts
+  </Step>
+</Steps>
+
+## Learn More
+
+Dive deeper into the technical implementation:
+
+<CardGroup cols={3}>
+  <Card title="Abstract" icon="file-lines" href="/abstract">
+    Research summary and findings
+  </Card>
+  <Card title="Dataset" icon="database" href="/data-preparation">
+    Data structure and features
+  </Card>
+  <Card title="Implementation" icon="code" href="/implementation/feature-engineering">
+    Julia code and algorithms
+  </Card>
+</CardGroup>

@@ -1,0 +1,258 @@
+---
+title: Feature Engineering
+description: Engineering 11 features from student interaction logs to capture performance patterns and learning behavior
+---
+
+## Overview
+
+The feature engineering process transforms raw student interaction logs into 11 meaningful features that capture performance patterns, learning behavior, and engagement metrics. Each feature is carefully designed to provide predictive signal for student success.
+
+## Feature Extraction Pipeline
+
+The `prepare_features` function processes student interaction data and generates all engineered features:
+
+```julia
+function prepare_features(df)
+    
+    question_df = df[df.content_type_id .== 0, :]
+    sort!(question_df, [:user_id, :timestamp])
+    
+    user_features = combine(groupby(question_df, :user_id)) do user_data
+        # Feature engineering logic here...
+    end
+    
+    return X, y, user_features, feature_cols
+end
+```
+
+## The 11 Engineered Features
+
+<Steps>
+  <Step title="Overall Performance Metrics">
+    
+    ### 1. Mean Accuracy (`mean_acc`)
+    
+    Average correctness across all questions answered by the student.
+    
+    ```julia
+    mean_acc = mean(user_data.answered_correctly)
+    ```
+    
+    <Note>
+      This is the primary performance indicator and serves as the foundation for the target variable.
+    </Note>
+    
+    ### 2. Standard Deviation of Accuracy (`std_acc`)
+    
+    Measures consistency in student performance.
+    
+    ```julia
+    std_acc = isnan(std(user_data.answered_correctly)) ? 0.0 : std(user_data.answered_correctly)
+    ```
+    
+    **Interpretation:**
+    - Low `std_acc`: Consistent performance
+    - High `std_acc`: Variable performance, may indicate struggling or inconsistent understanding
+    
+    ### 3. Number of Questions (`num_questions`)
+    
+    Total engagement level measured by question attempts.
+    
+    ```julia
+    num_questions = nrow(user_data)
+    ```
+    
+  </Step>
+  
+  <Step title="Temporal Features">
+    
+    ### 4. Mean Time Between Questions (`mean_time_between`)
+    
+    Average time gap between consecutive questions.
+    
+    ```julia
+    time_diffs = diff(user_data.timestamp)
+    mean_time_between = mean(time_diffs)
+    ```
+    
+    ### 5. Standard Deviation of Time Between Questions (`std_time_between`)
+    
+    Measures regularity of study sessions.
+    
+    ```julia
+    std_time_between = isnan(std(time_diffs)) ? 0.0 : std(time_diffs)
+    ```
+    
+    <Note>
+      Temporal patterns can reveal study habits: consistent intervals suggest regular practice, while irregular patterns may indicate cramming behavior.
+    </Note>
+    
+  </Step>
+  
+  <Step title="Trend and Recency Features">
+    
+    ### 6. Recent Accuracy (`recent_acc`)
+    
+    Performance on the last 5 questions answered.
+    
+    ```julia
+    recent_acc = mean(user_data.answered_correctly[max(1, end-4):end])
+    ```
+    
+    **Purpose:** Captures current performance state, which may differ from historical average.
+    
+    ### 7. Performance Trend (`performance_trend`)
+    
+    Improvement or decline measured by comparing first half to second half performance.
+    
+    ```julia
+    if length(user_data.answered_correctly) >= 10
+        first_half = mean(user_data.answered_correctly[1:div(end,2)])
+        second_half = mean(user_data.answered_correctly[div(end,2)+1:end])
+        trend = second_half - first_half
+    else
+        trend = 0.0
+    end
+    ```
+    
+    **Values:**
+    - Positive: Student is improving
+    - Negative: Student is declining
+    - Near zero: Stable performance
+    
+  </Step>
+  
+  <Step title="Container-Based Features">
+    
+    ### 8. Mean Container Accuracy (`mean_container_acc`)
+    
+    Average accuracy across different task containers (grouped question sets).
+    
+    ```julia
+    container_acc = combine(groupby(user_data, :task_container_id), 
+        :answered_correctly => mean => :container_acc).container_acc
+    mean_container_acc = mean(container_acc)
+    ```
+    
+    ### 9. Standard Deviation of Container Accuracy (`std_container_acc`)
+    
+    Variability in performance across different task containers.
+    
+    ```julia
+    std_container_acc = isnan(std(container_acc)) ? 0.0 : std(container_acc)
+    ```
+    
+    <Note>
+      High variability may indicate topic-specific strengths and weaknesses.
+    </Note>
+    
+  </Step>
+  
+  <Step title="Explanation and Correlation Features">
+    
+    ### 10. Explanation Impact (`explanation_impact`)
+    
+    Measures how explanations affect subsequent performance.
+    
+    ```julia
+    explanation_impact = 0.0
+    valid_explanations = 0
+    for i in 2:nrow(user_data)
+        if !ismissing(user_data.prior_question_had_explanation[i]) && user_data.prior_question_had_explanation[i]
+            explanation_impact += user_data.answered_correctly[i] - user_data.answered_correctly[i-1]
+            valid_explanations += 1
+        end
+    end
+    explanation_impact = valid_explanations > 0 ? explanation_impact / valid_explanations : 0.0
+    ```
+    
+    **Interpretation:**
+    - Positive value: Explanations help improve performance
+    - Negative value: Student may not benefit from explanations or become confused
+    - Near zero: Explanations have minimal effect
+    
+    ### 11. Time-Accuracy Correlation (`time_acc_correlation`)
+    
+    Correlation between time spent on questions and accuracy.
+    
+    ```julia
+    time_values = collect(skipmissing(user_data.prior_question_elapsed_time))
+    acc_values = float.(user_data.answered_correctly[.!ismissing.(user_data.prior_question_elapsed_time)])
+    
+    if length(time_values) > 1 && length(acc_values) > 1
+        time_acc_correlation = cor(time_values, acc_values)
+        time_acc_correlation = isnan(time_acc_correlation) ? 0.0 : time_acc_correlation
+    else
+        time_acc_correlation = 0.0
+    end
+    ```
+    
+    **Interpretation:**
+    - Positive correlation: More time spent leads to better accuracy
+    - Negative correlation: Student may be overthinking or struggling
+    
+  </Step>
+</Steps>
+
+## Feature Matrix Construction
+
+All features are combined into a single feature matrix:
+
+```julia
+feature_cols = [:mean_acc, :std_acc, :num_questions, :mean_time_between, 
+               :std_time_between, :recent_acc, :performance_trend, 
+               :mean_container_acc, :std_container_acc, :explanation_impact, 
+               :time_acc_correlation]
+
+for col in feature_cols
+    user_features[!, col] = float.(user_features[!, col])
+end
+
+X = Matrix{Float64}(user_features[:, feature_cols])
+replace!(X, NaN=>0.0, Inf=>0.0, -Inf=>0.0)
+```
+
+## Feature Normalization
+
+<Accordion title="Z-Score Normalization">
+  All features are normalized using z-score standardization to ensure equal contribution to the model:
+  
+  ```julia
+  # Normalization
+  X = (X .- mean(X, dims=1)) ./ std(X, dims=1)
+  ```
+  
+  This transforms each feature to have:
+  - Mean = 0
+  - Standard deviation = 1
+  
+  <Note>
+    Normalization is critical for regularized least squares to prevent features with larger scales from dominating the model.
+  </Note>
+</Accordion>
+
+## Target Variable
+
+The binary target variable classifies students as high or low performers based on median accuracy:
+
+```julia
+y = float.(user_features.mean_acc .>= median(user_features.mean_acc))
+```
+
+<ParamField path="y" type="binary">
+  - `1.0`: Student performs at or above median (high performer)
+  - `0.0`: Student performs below median (needs intervention)
+</ParamField>
+
+## Key Insights
+
+<Note>
+  The combination of performance metrics, temporal patterns, and behavioral features provides a comprehensive view of student learning that goes beyond simple accuracy measurements.
+</Note>
+
+**Feature Categories:**
+- **Performance**: `mean_acc`, `std_acc`, `recent_acc`, `mean_container_acc`, `std_container_acc`
+- **Engagement**: `num_questions`, `mean_time_between`, `std_time_between`
+- **Learning**: `performance_trend`, `explanation_impact`, `time_acc_correlation`
+
+These 11 features enable the model to identify students who need intervention with high precision.

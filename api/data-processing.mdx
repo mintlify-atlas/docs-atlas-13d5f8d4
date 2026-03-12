@@ -1,0 +1,145 @@
+---
+title: 'Data Processing'
+description: 'Functions for loading, filtering, and aggregating student performance data from CSV files'
+---
+
+## Overview
+
+The data processing module provides functions for loading large CSV files in chunks, filtering by content type, and computing aggregate statistics per user. These functions form the foundation of the data pipeline for analyzing online education logs.
+
+## CSV Loading with Chunks
+
+The data loading process uses Julia's `CSV.Chunks` to efficiently process large datasets by reading them in parallel chunks.
+
+### Implementation
+
+```julia
+using CSV, DataFrames
+using Random
+
+df = DataFrame()
+
+for chunk in CSV.Chunks("train.csv"; ntasks=10)
+    df_chunk = DataFrame(chunk)
+    df_chunk = filter(row -> rand() < 0.01, df_chunk) # randomly takes 1% of the dataset for each chunk
+    filter!(row -> row.content_type_id == 0, df_chunk)
+    append!(df, df_chunk)
+end
+```
+
+### Parameters
+
+<ParamField path="filename" type="String" required>
+  Path to the CSV file to load (e.g., `"train.csv"`)
+</ParamField>
+
+<ParamField path="ntasks" type="Integer" default="10">
+  Number of parallel tasks for chunk processing
+</ParamField>
+
+<ParamField path="sample_rate" type="Float" default="0.01">
+  Proportion of rows to randomly sample from each chunk (0.01 = 1%)
+</ParamField>
+
+<ParamField path="content_type_id" type="Integer" default="0">
+  Filter to include only rows where `content_type_id` matches this value (0 = questions)
+</ParamField>
+
+### Returns
+
+<ResponseField name="df" type="DataFrame">
+  A DataFrame containing the sampled and filtered rows from all chunks
+</ResponseField>
+
+<Note>
+  The sampling approach (`rand() < 0.01`) allows processing 1% of a massive dataset while maintaining randomness. This is useful for prototyping and testing on large education logs.
+</Note>
+
+---
+
+## Grouping and Aggregation
+
+After loading the data, aggregate statistics are computed per user to create features for modeling.
+
+### Implementation
+
+```julia
+grouped = combine(groupby(df[df.content_type_id .== 0, :], :user_id), 
+  :answered_correctly => mean => :mean_acc,
+  :answered_correctly => (x -> isnan(std(x)) ? 0.0 : std(x)) => :std_acc,
+  :answered_correctly => length => :num_attempted,
+  :prior_question_elapsed_time => (x -> mean(skipmissing(x))) => :avg_time,
+  :prior_question_had_explanation => (x -> mean(skipmissing(x))) => :mean_explained 
+)
+grouped = dropmissing(grouped)
+```
+
+### Aggregation Operations
+
+<ParamField path="mean_acc" type="Float64">
+  Mean accuracy per user - average of all `answered_correctly` values
+</ParamField>
+
+<ParamField path="std_acc" type="Float64">
+  Standard deviation of accuracy per user - measures consistency. Returns 0.0 if NaN
+</ParamField>
+
+<ParamField path="num_attempted" type="Integer">
+  Total number of questions attempted by the user
+</ParamField>
+
+<ParamField path="avg_time" type="Float64">
+  Average elapsed time per question, computed from `prior_question_elapsed_time`
+</ParamField>
+
+<ParamField path="mean_explained" type="Float64">
+  Proportion of questions where the user received an explanation
+</ParamField>
+
+### Returns
+
+<ResponseField name="grouped" type="DataFrame">
+  A DataFrame with one row per user and columns for each aggregate statistic
+</ResponseField>
+
+---
+
+## Feature Matrix Construction
+
+Convert the grouped DataFrame into a numeric matrix suitable for modeling.
+
+### Implementation
+
+```julia
+X = Matrix(grouped[:, [:mean_acc, :std_acc, :num_attempted, :avg_time, :mean_explained]])
+replace!(X, Inf=>0); replace!(X, NaN=>0)
+```
+
+### Process
+
+1. Select relevant columns from the grouped DataFrame
+2. Convert to a numeric matrix using `Matrix()`
+3. Replace `Inf` and `NaN` values with 0 to handle edge cases
+
+### Returns
+
+<ResponseField name="X" type="Matrix{Float64}">
+  A matrix where each row represents a user and each column represents a feature
+</ResponseField>
+
+<Accordion title="Example Output Structure">
+  ```julia
+  # X matrix structure (n_users × 5)
+  # Columns: [mean_acc, std_acc, num_attempted, avg_time, mean_explained]
+  
+  5×5 Matrix{Float64}:
+   0.75  0.43  120  45000  0.67
+   0.82  0.38  150  38000  0.71
+   0.61  0.49   90  52000  0.55
+   ...
+  ```
+</Accordion>
+
+<Note>
+  The `content_type_id == 0` filter ensures only question responses are included, excluding lecture views or other content types.
+</Note>

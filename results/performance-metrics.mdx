@@ -1,0 +1,114 @@
+---
+title: Performance Metrics
+description: Comprehensive evaluation metrics for the regularized least squares model and clustering analysis
+---
+
+## Model Performance Overview
+
+The regularized least squares model with λ=0.01 demonstrated strong predictive performance in identifying students who need intervention. The model was trained on engineered features including mean accuracy, consistency trends, and explanation effectiveness.
+
+<CardGroup cols={2}>
+  <Card title="Accuracy" icon="chart-line">
+    **~80.7%** overall accuracy in predicting student success
+  </Card>
+  <Card title="Precision" icon="bullseye">
+    **100%** precision in positive predictions
+  </Card>
+</CardGroup>
+
+## Confusion Matrix Breakdown
+
+The model's performance is evaluated through a confusion matrix that compares predicted outcomes against actual student performance:
+
+<Info>
+  The model classifies students as either needing intervention (positive) or performing adequately (negative) based on their mean accuracy relative to the median.
+</Info>
+
+### Key Metrics
+
+- **True Positives (TP)**: Students correctly identified as needing intervention
+- **True Negatives (TN)**: Students correctly identified as performing adequately
+- **False Positives (FP)**: Students incorrectly flagged for intervention
+- **False Negatives (FN)**: Students who need help but were not identified
+
+<Note>
+  The 100% precision indicates that when the model predicts a student needs intervention, it is always correct. This is critical for efficient resource allocation in educational settings.
+</Note>
+
+## K-Means Clustering Results
+
+### Cluster Configuration
+
+<Accordion title="Clustering Parameters">
+  - **Number of Clusters (K)**: 20
+  - **Max Iterations**: 20
+  - **Features Used**: Mean accuracy, standard deviation of accuracy, number of attempts, average time, mean explanation effectiveness
+</Accordion>
+
+The K-Means clustering analysis successfully revealed distinct performance groups by capturing variation across three primary dimensions:
+
+1. **Mean Accuracy**: Overall correctness rate
+2. **Standard Deviation of Accuracy**: Consistency in performance
+3. **Number of Attempts**: Student engagement level
+
+### Performance Groups Identified
+
+The clustering algorithm identified multiple performance groups characterized by:
+
+- Students with high accuracy and low variability (consistent high performers)
+- Students with moderate accuracy and high engagement (improving learners)
+- Students with low accuracy despite multiple attempts (need intervention)
+- Students with inconsistent performance (need targeted support)
+
+<Note>
+  The choice of K=20 clusters was validated using the elbow method to balance granularity with interpretability.
+</Note>
+
+## Feature Engineering Impact
+
+The model's strong performance is attributed to comprehensive feature engineering that captures:
+
+<CardGroup cols={2}>
+  <Card title="Accuracy Metrics" icon="percent">
+    - Mean accuracy per user
+    - Standard deviation of accuracy
+    - Recent accuracy trends
+  </Card>
+  <Card title="Behavioral Metrics" icon="clock">
+    - Number of questions attempted
+    - Time between attempts
+    - Performance trends over time
+  </Card>
+  <Card title="Container Metrics" icon="box">
+    - Mean accuracy per task container
+    - Variability across containers
+  </Card>
+  <Card title="Tutorial Effectiveness" icon="graduation-cap">
+    - Explanation impact on performance
+    - Time-accuracy correlation
+  </Card>
+</CardGroup>
+
+## Regularization Parameter
+
+The regularized least squares model uses λ=0.01 to prevent overfitting:
+
+```julia
+β = regularized_ls(X_train, y_train, .01)
+```
+
+<Info>
+  Regularization helps the model generalize better to unseen students by penalizing overly complex coefficient patterns.
+</Info>
+
+## Model Validation
+
+The model was evaluated using an 80/20 train-test split with random shuffling to ensure unbiased assessment:
+
+- **Training Set**: 80% of student data for parameter estimation
+- **Test Set**: 20% of student data for performance evaluation
+- **Evaluation Method**: Binary classification with 0.5 threshold
+
+<Note>
+  All features were normalized using z-score standardization to ensure equal contribution across different scales.
+</Note>

@@ -1,0 +1,91 @@
+---
+title: 'Introduction'
+description: 'Overview of the Online Education Logs Analysis project using machine learning to identify student struggles and optimize educational outcomes'
+---
+
+# Identifying Struggles and Tutorial Impact in Online Education Logs
+
+This project implements clustering and regression analysis on Riiid education logs to identify student difficulties and predict performance outcomes. By leveraging machine learning techniques, we can tailor education to individual student abilities and provide targeted support.
+
+<Note>
+  This research was conducted as part of **MAS 4106 - Spring 2025** at Florida Gulf Coast University, under the instruction of Dr. Alberto A. Condori.
+</Note>
+
+## Project Overview
+
+The analysis combines **K-Means Clustering** and **Regularized Least Squares** models to:
+
+- Identify performance groups among students
+- Predict student success with high accuracy
+- Enable personalized education strategies
+- Support efficient allocation of educational resources
+
+<CardGroup cols={2}>
+  <Card title="Research Abstract" icon="book" href="/abstract" color="#3B82F6">
+    Explore the full research abstract, methodology, and key findings
+  </Card>
+  <Card title="Educational Context" icon="graduation-cap" href="/research-context" color="#60A5FA">
+    Learn about Riiid, the dataset, and the impact on education
+  </Card>
+  <Card title="Dataset Analysis" icon="database" href="/data-preparation" color="#1E40AF">
+    Understand the data structure and feature engineering approach
+  </Card>
+  <Card title="Implementation" icon="code" href="/implementation/feature-engineering" color="#3B82F6">
+    Review the Julia implementation and technical details
+  </Card>
+</CardGroup>
+
+## Key Results
+
+<Info>
+  The regularized least squares model with **λ=0.01** achieved:
+  - **~80.7% accuracy** in predicting student success
+  - **100% precision** in identifying students who need intervention
+</Info>
+
+The K-Means clustering successfully revealed distinct performance groups by capturing variation in:
+- Mean accuracy across questions
+- Standard deviation in performance (consistency)
+- Number of attempts and engagement patterns
+
+## Why This Matters
+
+<Steps>
+  <Step title="Improve Student Outcomes">
+    Enabling higher efficiency in education directly improves student performance and opens doors for social mobility.
+  </Step>
+  <Step title="Optimize Resources">
+    Meeting students with support exactly where they're struggling is an efficient use of both student and educator time.
+  </Step>
+  <Step title="Enable Personalization">
+    Predictive modeling with performance-based clustering supports the development of personalized education strategies.
+  </Step>
+  <Step title="Identify Intervention Needs">
+    Educators can reliably determine whether a student needs help or falls within a performance group classified as needing intervention.
+  </Step>
+</Steps>
+
+## Stakeholders
+
+This research is important to:
+- **Educators** - Identify struggling students early and allocate support effectively
+- **Students** - Receive personalized learning experiences tailored to their needs
+- **Parents** - Track student progress and intervention requirements
+- **Institutions** - Optimize educational outcomes and resource allocation
+- **EdTech Companies** - Develop AI-driven personalized learning platforms
+
+## Get Started
+
+Explore the documentation to learn more about the methodology, implementation, and findings:
+
+<CardGroup cols={3}>
+  <Card title="Abstract" icon="file-lines" href="/abstract">
+    Research summary
+  </Card>
+  <Card title="Context" icon="lightbulb" href="/research-context">
+    Educational impact
+  </Card>
+  <Card title="Dataset" icon="table" href="/data-preparation">
+    Data structure
+  </Card>
+</CardGroup>

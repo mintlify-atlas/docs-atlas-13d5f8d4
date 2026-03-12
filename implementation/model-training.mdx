@@ -1,0 +1,184 @@
+---
+title: Model Training
+description: Training a regularized least squares model with lambda tuning to predict student success
+---
+
+## Overview
+
+The model training process uses **regularized least squares** (Ridge Regression) to predict whether a student will perform above or below the median. The model achieves approximately **80.7% accuracy** with **100% precision** using optimal regularization.
+
+## Training Pipeline
+
+<Steps>
+  <Step title="Prepare Features and Target">
+    
+    Extract all 11 engineered features and the binary target variable:
+    
+    ```julia
+    X, y, user_features, feature_cols = prepare_features(df)
+    ```
+    
+    <ParamField path="X" type="matrix">
+      Feature matrix of shape (n_students, 11) containing normalized features
+    </ParamField>
+    
+    <ParamField path="y" type="vector">
+      Binary target vector indicating high (1.0) or low (0.0) performers
+    </ParamField>
+    
+  </Step>
+  
+  <Step title="Split Data into Train and Test Sets">
+    
+    The `split_data` function randomly partitions the dataset into 80% training and 20% testing:
+    
+    ```julia
+    function split_data(X, y, train_ratio=0.8)
+        n = size(X, 1)
+        shuffle_idx = randperm(n)
+        train_size = floor(Int, train_ratio * n)
+        
+        X_train = X[shuffle_idx[1:train_size], :]
+        y_train = y[shuffle_idx[1:train_size]]
+        X_test = X[shuffle_idx[(train_size+1):end], :]
+        y_test = y[shuffle_idx[(train_size+1):end]]
+        
+        return X_train, y_train, X_test, y_test
+    end
+    ```
+    
+    ```julia
+    X_train, y_train, X_test, y_test = split_data(X, y)
+    ```
+    
+    <Note>
+      Random shuffling ensures unbiased train/test splits and prevents temporal ordering effects.
+    </Note>
+    
+  </Step>
+  
+  <Step title="Train Regularized Least Squares Model">
+    
+    The `regularized_ls` function implements Ridge Regression using the closed-form solution:
+    
+    ```julia
+    function regularized_ls(X, y, λ)
+        n, p = size(X)
+        β = (X'X + λ*I(p)) \ (X'y)
+        return β
+    end
+    ```
+    
+    **Mathematical Formulation:**
+    
+    $$\beta = (X^T X + \lambda I)^{-1} X^T y$$
+    
+    Where:
+    - $X$ is the feature matrix
+    - $y$ is the target vector
+    - $\lambda$ is the regularization parameter
+    - $I$ is the identity matrix
+    - $\beta$ are the learned coefficients
+    
+    <Note>
+      The regularization term $\lambda I$ prevents overfitting by penalizing large coefficient values.
+    </Note>
+    
+  </Step>
+</Steps>
+
+## Lambda Parameter Tuning
+
+<Accordion title="Optimal Lambda Selection">
+  The regularization parameter $\lambda$ controls the trade-off between fitting the training data and keeping the model simple.
+  
+  After experimentation, **λ = 0.01** was selected as the optimal value:
+  
+  ```julia
+  β = regularized_ls(X_train, y_train, .01)
+  ```
+  
+  **Effect of Lambda:**
+  - **λ = 0**: No regularization (standard least squares, may overfit)
+  - **λ = 0.01**: Optimal balance (selected value)
+  - **λ → ∞**: Maximum regularization (may underfit)
+  
+  <Note>
+    The small lambda value (0.01) indicates that the features are well-engineered and don't require heavy regularization.
+  </Note>
+</Accordion>
+
+## Training Execution
+
+Complete training workflow in practice:
+
+```julia
+# Step 1: Prepare features
+X, y, user_features, feature_cols = prepare_features(df)
+
+# Step 2: Split into train/test
+X_train, y_train, X_test, y_test = split_data(X, y)
+
+# Step 3: Train model with optimal lambda
+β = regularized_ls(X_train, y_train, .01)
+
+# Step 4: Evaluate on test set
+metrics = print_confusion_matrix_table(X_test, y_test, β)
+```
+
+## Prediction Function
+
+Once the model is trained, predictions are made using the learned coefficients:
+
+```julia
+function predict(X, β)
+    return X * β
+end
+```
+
+The output is a continuous value that is thresholded at 0.5 to produce binary predictions:
+
+```julia
+y_pred_continuous = predict(X, β)
+y_pred_binary = y_pred_continuous .>= 0.5
+```
+
+<ParamField path="y_pred_binary" type="boolean">
+  - `true` (1): Predicted high performer
+  - `false` (0): Predicted low performer (needs intervention)
+</ParamField>
+
+## Model Evaluation Helper
+
+Simple accuracy calculation for quick model assessment:
+
+```julia
+function evaluate_model(y_true, y_pred)
+    predictions = y_pred .>= 0.5
+    accuracy = mean(predictions .== y_true)
+    return accuracy
+end
+```
+
+## Key Training Insights
+
+<Note>
+  The regularized least squares approach provides several advantages:
+  
+  1. **Closed-form solution**: No iterative optimization needed
+  2. **Fast training**: Efficient matrix operations
+  3. **Interpretable**: Coefficient magnitudes show feature importance
+  4. **Robust**: Regularization prevents overfitting with limited data
+</Note>
+
+### Training Results
+
+- **Train/Test Split**: 80/20
+- **Regularization Parameter**: λ = 0.01
+- **Number of Features**: 11
+- **Model Type**: Regularized Least Squares (Ridge Regression)
+- **Training Time**: Fast (closed-form solution)
+
+## Next Steps
+
+After training, the model is evaluated on the held-out test set to measure generalization performance. See [Evaluation](/implementation/evaluation) for detailed metrics and confusion matrix analysis.

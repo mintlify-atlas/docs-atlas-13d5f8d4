@@ -1,0 +1,210 @@
+---
+title: Research Findings
+description: Key discoveries and implications for personalized education strategies from the online education logs analysis
+---
+
+## Executive Summary
+
+This research demonstrates that predictive modeling combined with performance-based clustering can effectively support the development of personalized education strategies. Educators can reliably identify students who need intervention through machine learning analysis of student interaction logs.
+
+<CardGroup cols={2}>
+  <Card title="Model Accuracy" icon="chart-simple">
+    ~80.7% accuracy in predicting student success
+  </Card>
+  <Card title="Intervention Precision" icon="bullseye">
+    100% precision in identifying students needing help
+  </Card>
+</CardGroup>
+
+## Performance Groups Identified
+
+The K-Means clustering analysis successfully revealed distinct performance groups by capturing variation across multiple dimensions:
+
+### Clustering Success
+
+<Info>
+  K-Means clustering identified 20 distinct performance groups based on mean accuracy, standard deviation of accuracy, and number of attempts.
+</Info>
+
+These groups enable educators to:
+
+- **Segment students** by performance characteristics
+- **Identify patterns** in learning behavior
+- **Target interventions** to specific groups
+- **Track progress** across performance tiers
+
+<Accordion title="Group Characteristics">
+  The clustering revealed students with varying combinations of:
+  
+  - High accuracy with consistency (mastery level)
+  - Moderate accuracy with high engagement (active learners)
+  - Low accuracy despite multiple attempts (struggling students)
+  - Inconsistent performance patterns (need stability support)
+</Accordion>
+
+## Predictive Modeling Effectiveness
+
+The regularized least squares model with λ=0.01 achieved exceptional performance in predicting which students would perform above or below the median accuracy threshold.
+
+### Key Results
+
+<CardGroup cols={3}>
+  <Card title="Accuracy" icon="percent">
+    **~80.7%**
+    
+    Overall classification accuracy
+  </Card>
+  <Card title="Precision" icon="crosshairs">
+    **100%**
+    
+    No false positives in intervention flagging
+  </Card>
+  <Card title="Lambda" icon="lambda">
+    **0.01**
+    
+    Optimal regularization parameter
+  </Card>
+</CardGroup>
+
+<Note>
+  The 100% precision means that when the model recommends intervention for a student, educators can act with confidence that the recommendation is correct.
+</Note>
+
+### Feature Engineering Impact
+
+Feature engineering was critical to model success. The analysis included:
+
+- Mean accuracy and standard deviation
+- Consistency trends over time
+- Tutorial explanation effectiveness
+- Time-accuracy correlations
+- Container-level performance variations
+- Recent performance vs. historical trends
+
+<Info>
+  These engineered features capture nuanced aspects of student behavior that raw interaction logs alone cannot provide.
+</Info>
+
+## Personalized Education Strategies Support
+
+The findings demonstrate that data-driven approaches can support personalized education at scale:
+
+### Benefits for Educators
+
+<CardGroup cols={2}>
+  <Card title="Early Identification" icon="magnifying-glass">
+    Detect struggling students before they fall too far behind
+  </Card>
+  <Card title="Efficient Resource Allocation" icon="coins">
+    Direct support to students who need it most
+  </Card>
+  <Card title="Tailored Interventions" icon="user-gear">
+    Match intervention types to student performance profiles
+  </Card>
+  <Card title="Progress Monitoring" icon="chart-line">
+    Track effectiveness of interventions over time
+  </Card>
+</CardGroup>
+
+### Meeting Students Where They Are
+
+<Note>
+  Meeting students with support for exactly where they're struggling is an efficient use of both the student's and educator's time.
+</Note>
+
+The analysis enables:
+
+- **Precise identification** of struggle areas
+- **Timely intervention** before problems compound
+- **Customized support** based on performance patterns
+- **Data-driven decisions** rather than intuition alone
+
+## Educator Intervention Identification
+
+The model reliably determines whether a student:
+
+1. **Needs immediate intervention** (low accuracy, high variability)
+2. **Would benefit from targeted support** (moderate performance with inconsistency)
+3. **Is performing adequately** (high accuracy, low variability)
+4. **Falls within specific performance groups** requiring tailored strategies
+
+<Accordion title="Intervention Triggers">
+  Students are classified as needing intervention based on:
+  
+  - Performance below median accuracy
+  - High variability in correctness
+  - Poor tutorial explanation effectiveness
+  - Declining performance trends
+  - Low accuracy despite high engagement
+</Accordion>
+
+## Educational Impact on Social Mobility
+
+The research addresses a critical educational challenge with broad societal implications:
+
+### The Big Picture
+
+<Info>
+  Enabling higher efficiency in education improves student outcomes, which in turn opens doors for social mobility.
+</Info>
+
+### Stakeholder Benefits
+
+This research is important to:
+
+- **Educators**: More effective teaching with limited resources
+- **Students**: Receiving help precisely when and where needed
+- **Parents**: Visibility into their children's learning progress
+- **Educational Institutions**: Data-driven improvement strategies
+- **Society**: Expanding access to quality education
+
+### Riiid Partnership
+
+The data comes from Riiid, an AI EdTech company based in South Korea, demonstrating real-world applicability:
+
+<CardGroup cols={2}>
+  <Card title="Industry Application" icon="building">
+    Methods tested on production education platform
+  </Card>
+  <Card title="Scale" icon="users">
+    Analysis applicable to large student populations
+  </Card>
+</CardGroup>
+
+## Research Conclusions
+
+The study's findings suggest several important conclusions:
+
+### 1. Clustering Reveals Structure
+
+K-Means clustering successfully identified meaningful performance groups based on accuracy, consistency, and engagement patterns. These groups are not arbitrary but reflect genuine differences in student learning profiles.
+
+### 2. Prediction Enables Action
+
+With ~80.7% accuracy and 100% precision, the model provides actionable insights that educators can trust when making intervention decisions.
+
+### 3. Feature Engineering is Critical
+
+Raw interaction logs alone are insufficient. Engineered features capturing trends, consistency, and tutorial effectiveness are essential for accurate prediction.
+
+### 4. Personalization is Achievable
+
+The combination of clustering and predictive modeling demonstrates that personalized education strategies can be developed systematically using student interaction data.
+
+<Note>
+  These findings suggest that predictive modeling with performance-based clustering can support the development of personalized education strategies, since educators can reliably determine whether a student needs help or falls within a performance group that is classified as intervention needing.
+</Note>
+
+## Future Implications
+
+This research opens pathways for:
+
+- **Real-time intervention systems** that alert educators as students struggle
+- **Adaptive learning platforms** that adjust difficulty based on performance groups
+- **Outcome prediction** to forecast long-term student success
+- **Tutorial optimization** using explanation effectiveness metrics
+- **Resource planning** based on predicted intervention needs
+
+<Info>
+  The methodology developed here can be applied to other educational platforms and contexts, extending the impact beyond the Riiid dataset.
+</Info>

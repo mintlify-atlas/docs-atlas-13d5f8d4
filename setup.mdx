@@ -1,0 +1,103 @@
+---
+title: Setup
+description: Install Julia and set up your environment for analyzing online education logs
+---
+
+## Overview
+
+This project uses Julia 1.11.2 for high-performance data analysis and machine learning. Follow these steps to get your development environment ready.
+
+## Installation Steps
+
+<Steps>
+  <Step title="Download Julia 1.11.2">
+    Visit the [official Julia downloads page](https://julialang.org/downloads/) and download Julia 1.11.2 for your operating system.
+    
+    <CodeGroup>
+    ```bash Linux
+    wget https://julialang-s3.julialang.org/bin/linux/x64/1.11/julia-1.11.2-linux-x86_64.tar.gz
+    tar -xvzf julia-1.11.2-linux-x86_64.tar.gz
+    sudo mv julia-1.11.2 /opt/
+    sudo ln -s /opt/julia-1.11.2/bin/julia /usr/local/bin/julia
+    ```
+    
+    ```bash macOS
+    brew install julia
+    ```
+    
+    ```powershell Windows
+    # Download the installer from julialang.org
+    # Run the .exe installer and follow the prompts
+    # Add Julia to your PATH during installation
+    ```
+    </CodeGroup>
+  </Step>
+  
+  <Step title="Verify Installation">
+    Open a terminal and verify that Julia is installed correctly:
+    
+    ```bash
+    julia --version
+    ```
+    
+    You should see output similar to:
+    ```
+    julia version 1.11.2
+    ```
+  </Step>
+  
+  <Step title="Launch Julia REPL">
+    Start the Julia interactive environment:
+    
+    ```bash
+    julia
+    ```
+    
+    You'll see the Julia prompt:
+    ```
+    julia>
+    ```
+  </Step>
+  
+  <Step title="Configure Package Manager">
+    Julia's package manager (Pkg) is built-in. You can access it by pressing `]` in the REPL:
+    
+    ```julia
+    # Press ] to enter Pkg mode
+    (@v1.11) pkg>
+    ```
+    
+    Press backspace to return to the Julia prompt.
+  </Step>
+</Steps>
+
+<Note>
+  This project was developed using Julia 1.11.2. Using a different version may result in compatibility issues with dependencies.
+</Note>
+
+## IDE Setup (Optional)
+
+### Jupyter Notebook
+
+To use Julia with Jupyter notebooks:
+
+```julia
+using Pkg
+Pkg.add("IJulia")
+```
+
+Then launch Jupyter:
+
+```bash
+jupyter notebook
+```
+
+### VS Code
+
+1. Install [Visual Studio Code](https://code.visualstudio.com/)
+2. Install the [Julia extension](https://marketplace.visualstudio.com/items?itemName=julialang.language-julia)
+3. Configure the Julia executable path in VS Code settings
+
+## Next Steps
+
+Once Julia is installed, proceed to [install the required dependencies](/dependencies).

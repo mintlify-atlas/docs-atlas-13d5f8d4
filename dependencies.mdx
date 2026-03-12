@@ -1,0 +1,147 @@
+---
+title: Dependencies
+description: Install all required Julia packages for the analysis
+---
+
+## Required Packages
+
+This project requires several Julia packages for data processing, linear algebra, machine learning, and visualization.
+
+## Quick Installation
+
+You can install all required packages at once using the following command:
+
+```julia
+import Pkg
+Pkg.add("LinearAlgebra")
+Pkg.add("Plots")
+Pkg.add("Statistics")
+Pkg.add("CSV")
+Pkg.add("DataFrames")
+Pkg.add("Random")
+Pkg.add("Clustering")
+Pkg.add("PlotlyJS")
+```
+
+<Note>
+  This installation command is taken directly from the project notebook (cell 1).
+</Note>
+
+## Package Overview
+
+### Core Packages
+
+<Card title="LinearAlgebra" icon="calculator">
+  Provides matrix operations and linear algebra functions used for regularized least squares modeling.
+</Card>
+
+<Card title="Statistics" icon="chart-line">
+  Statistical functions including mean, standard deviation, and correlation calculations.
+</Card>
+
+<Card title="Random" icon="shuffle">
+  Random number generation for data sampling and train-test splitting.
+</Card>
+
+### Data Processing
+
+<Card title="CSV" icon="file-csv">
+  Efficient reading of large CSV files using chunked processing. Essential for handling the large RIIID dataset.
+</Card>
+
+<Card title="DataFrames" icon="table">
+  Data manipulation and transformation operations similar to pandas in Python.
+</Card>
+
+### Machine Learning
+
+<Card title="Clustering" icon="object-group">
+  K-means clustering implementation for identifying student performance groups.
+</Card>
+
+### Visualization
+
+<Card title="Plots" icon="chart-area">
+  Primary plotting library for creating visualizations.
+</Card>
+
+<Card title="PlotlyJS" icon="chart-scatter">
+  Interactive plotting capabilities for 3D visualizations and exploratory analysis.
+</Card>
+
+## Individual Package Installation
+
+If you prefer to install packages one at a time or need to add a specific package:
+
+<CodeGroup>
+```julia REPL Mode
+# In the Julia REPL, press ] to enter Pkg mode
+add LinearAlgebra
+add Plots
+add Statistics
+add CSV
+add DataFrames
+add Random
+add Clustering
+add PlotlyJS
+```
+
+```julia Script Mode
+import Pkg
+Pkg.add("LinearAlgebra")
+Pkg.add("Plots")
+Pkg.add("Statistics")
+Pkg.add("CSV")
+Pkg.add("DataFrames")
+Pkg.add("Random")
+Pkg.add("Clustering")
+Pkg.add("PlotlyJS")
+```
+</CodeGroup>
+
+## Verification
+
+Verify that all packages are installed correctly by loading them:
+
+```julia
+using LinearAlgebra
+using Plots
+using Statistics
+using CSV, DataFrames
+using Random
+using Clustering
+```
+
+If all packages load without errors, your environment is ready!
+
+<Warning>
+  Package installation may take several minutes, especially for Plots and PlotlyJS which have many dependencies.
+</Warning>
+
+## Troubleshooting
+
+### Package Installation Fails
+
+If you encounter errors during installation:
+
+```julia
+# Update the package registry
+using Pkg
+Pkg.update()
+
+# Then try installing again
+Pkg.add("PackageName")
+```
+
+### Precompilation Errors
+
+If packages fail to precompile:
+
+```julia
+using Pkg
+Pkg.build()  # Rebuild all packages
+```
+
+## Next Steps
+
+With all dependencies installed, you're ready to [prepare your data](/data-preparation).
