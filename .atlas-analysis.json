@@ -1,0 +1,90 @@
+{
+  "projectType": "ai-ml",
+  "projectName": "Online Education Logs Analysis",
+  "projectDescription": "Clustering and regression analysis on RIIID education logs to identify student difficulties and predict performance.",
+  "theme": "palm",
+  "primaryColor": "#3B82F6",
+  "lightColor": "#60A5FA",
+  "darkColor": "#1E40AF",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "introduction",
+              "abstract",
+              "research-context"
+            ]
+          },
+          {
+            "group": "Getting Started",
+            "pages": [
+              "setup",
+              "dependencies",
+              "data-preparation"
+            ]
+          },
+          {
+            "group": "Methodology",
+            "pages": [
+              "methodology/overview",
+              "methodology/kmeans-clustering",
+              "methodology/regularized-least-squares"
+            ]
+          },
+          {
+            "group": "Implementation",
+            "pages": [
+              "implementation/feature-engineering",
+              "implementation/model-training",
+              "implementation/evaluation"
+            ]
+          },
+          {
+            "group": "Results",
+            "pages": [
+              "results/performance-metrics",
+              "results/visualizations",
+              "results/findings"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Core Functions",
+            "pages": [
+              "api/data-processing",
+              "api/feature-functions",
+              "api/model-functions",
+              "api/evaluation-functions"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "K-Means clustering with 20 clusters for student performance segmentation",
+    "Regularized least squares model achieving ~80.7% accuracy",
+    "Advanced feature engineering including performance trends and explanation impact",
+    "Interactive 3D visualization of clustering results",
+    "Confusion matrix evaluation with precision and accuracy metrics",
+    "Julia-based implementation with DataFrames, Clustering, and PlotlyJS"
+  ],
+  "publicApiSurface": [
+    "prepare_features(df) - Engineer features from raw education logs",
+    "regularized_ls(X, y, λ) - Train regularized least squares model",
+    "predict(X, β) - Make predictions with trained model",
+    "evaluate_model(y_true, y_pred) - Calculate model accuracy",
+    "split_data(X, y, train_ratio) - Split dataset into train/test sets",
+    "print_confusion_matrix_table(X, y, β) - Display confusion matrix and metrics",
+    "scale_features(X) - Normalize features using z-score",
+    "regularize_attempts(X, λ) - Apply regularization to attempt counts"
+  ]
+}
